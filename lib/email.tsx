@@ -45,7 +45,9 @@ function formatSleeping(arrangements) {
     .map(
       (a) => `
         <tr>
-          <td style="padding:10px;border-bottom:1px solid #EADAC1;">Tent ${a.tentNumber}</td>
+          <td style="padding:10px;border-bottom:1px solid #EADAC1;">Tent ${
+            a.tentNumber
+          }</td>
           <td style="padding:10px;border-bottom:1px solid #EADAC1;">${
             a.arrangement === "all-singles"
               ? "All Single Beds (4 singles)"
@@ -162,7 +164,9 @@ export async function sendBookingConfirmation(booking) {
               </tr>
               <tr>
                 <td style="padding:10px;">👨‍👩‍👧 <strong>Guests</strong></td>
-                <td style="padding:10px;">${booking.adults} adults${booking.children ? `, ${booking.children} children` : ""}</td>
+                <td style="padding:10px;">${booking.adults} adults${
+      booking.children ? `, ${booking.children} children` : ""
+    }</td>
               </tr>
               <tr style="background:#FDF7EC;">
                 <td style="padding:10px;">⛺ <strong>Tents</strong></td>
@@ -180,10 +184,18 @@ export async function sendBookingConfirmation(booking) {
           <h3 style="margin-top:20px;">Payment Summary</h3>
           <div style="border:1px solid #EADAC1;border-radius:10px;overflow:hidden;">
             <table style="width:100%;border-collapse:collapse;font-size:14px;">
-              <tr><td style="padding:10px;">Subtotal</td><td style="padding:10px;text-align:right;">AED ${booking.subtotal.toFixed(2)}</td></tr>
-              <tr style="background:#FDF7EC;"><td style="padding:10px;">VAT</td><td style="padding:10px;text-align:right;">AED ${booking.vat.toFixed(2)}</td></tr>
-              <tr><td style="padding:10px;"><strong>Total</strong></td><td style="padding:10px;text-align:right;color:#1B8F5A;"><strong>AED ${booking.total.toFixed(2)}</strong></td></tr>
-              <tr style="background:#FDF7EC;"><td style="padding:10px;">Status</td><td style="padding:10px;text-align:right;">${booking.isPaid ? "✅ Paid" : "❌ Pending"}</td></tr>
+              <tr><td style="padding:10px;">Subtotal</td><td style="padding:10px;text-align:right;">AED ${booking.subtotal.toFixed(
+                2
+              )}</td></tr>
+              <tr style="background:#FDF7EC;"><td style="padding:10px;">VAT</td><td style="padding:10px;text-align:right;">AED ${booking.vat.toFixed(
+                2
+              )}</td></tr>
+              <tr><td style="padding:10px;"><strong>Total</strong></td><td style="padding:10px;text-align:right;color:#1B8F5A;"><strong>AED ${booking.total.toFixed(
+                2
+              )}</strong></td></tr>
+              <tr style="background:#FDF7EC;"><td style="padding:10px;">Status</td><td style="padding:10px;text-align:right;">${
+                booking.isPaid ? "✅ Paid" : "❌ Pending"
+              }</td></tr>
             </table>
           </div>
 
@@ -199,7 +211,6 @@ export async function sendBookingConfirmation(booking) {
     `,
   });
 }
-
 
 export async function sendAdminNotification(booking) {
   const bookingDate = formatDate(booking.bookingDate);
@@ -218,7 +229,7 @@ export async function sendAdminNotification(booking) {
 
   return transporter.sendMail({
     from: `"Nomadic Notifications" <${process.env.SMTP_USER}>`,
-    to: "bookings@nomadic.ae",
+    to: "umarahmedse@gmail.com",
     subject: `📩 New Booking – ${booking.customerName}`,
     html: `
       <div style="font-family:'Inter',Arial,sans-serif;background-color:#FFF7E8;color:#3C2317;max-width:700px;margin:auto;border-radius:16px;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,0.08);">
@@ -228,7 +239,9 @@ export async function sendAdminNotification(booking) {
         </div>
 
         <div style="padding:24px;">
-          <p><strong>${booking.customerName}</strong> has made a new booking.</p>
+          <p><strong>${
+            booking.customerName
+          }</strong> has made a new booking.</p>
 
           <div style="margin:16px 0;border:1px solid #EADAC1;border-radius:10px;overflow:hidden;">
             <table style="width:100%;border-collapse:collapse;font-size:14px;">
@@ -242,7 +255,9 @@ export async function sendAdminNotification(booking) {
               </tr>
               <tr style="background:#FDF7EC;">
                 <td style="padding:10px;">👨‍👩‍👧 <strong>Guests</strong></td>
-                <td style="padding:10px;">${booking.adults} adults${booking.children ? `, ${booking.children} children` : ""}</td>
+                <td style="padding:10px;">${booking.adults} adults${
+      booking.children ? `, ${booking.children} children` : ""
+    }</td>
               </tr>
               <tr>
                 <td style="padding:10px;">📧 <strong>Email</strong></td>
@@ -264,10 +279,18 @@ export async function sendAdminNotification(booking) {
           <h3 style="margin-top:20px;">Payment Summary</h3>
           <div style="border:1px solid #EADAC1;border-radius:10px;overflow:hidden;">
             <table style="width:100%;border-collapse:collapse;font-size:14px;">
-              <tr><td style="padding:10px;">Subtotal</td><td style="padding:10px;text-align:right;">AED ${booking.subtotal.toFixed(2)}</td></tr>
-              <tr style="background:#FDF7EC;"><td style="padding:10px;">VAT</td><td style="padding:10px;text-align:right;">AED ${booking.vat.toFixed(2)}</td></tr>
-              <tr><td style="padding:10px;"><strong>Total</strong></td><td style="padding:10px;text-align:right;color:#1B8F5A;"><strong>AED ${booking.total.toFixed(2)}</strong></td></tr>
-              <tr style="background:#FDF7EC;"><td style="padding:10px;">Status</td><td style="padding:10px;text-align:right;">${booking.isPaid ? "✅ Paid" : "❌ Pending"}</td></tr>
+              <tr><td style="padding:10px;">Subtotal</td><td style="padding:10px;text-align:right;">AED ${booking.subtotal.toFixed(
+                2
+              )}</td></tr>
+              <tr style="background:#FDF7EC;"><td style="padding:10px;">VAT</td><td style="padding:10px;text-align:right;">AED ${booking.vat.toFixed(
+                2
+              )}</td></tr>
+              <tr><td style="padding:10px;"><strong>Total</strong></td><td style="padding:10px;text-align:right;color:#1B8F5A;"><strong>AED ${booking.total.toFixed(
+                2
+              )}</strong></td></tr>
+              <tr style="background:#FDF7EC;"><td style="padding:10px;">Status</td><td style="padding:10px;text-align:right;">${
+                booking.isPaid ? "✅ Paid" : "❌ Pending"
+              }</td></tr>
             </table>
           </div>
 
