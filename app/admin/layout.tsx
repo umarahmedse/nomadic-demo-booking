@@ -73,7 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     )
   }
 
-  const navigationItems = [
+  const campingNav = [
     {
       href: "/admin/dashboard",
       label: "Dashboard",
@@ -92,11 +92,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       icon: Settings,
       description: "System Configuration",
     },
+  ]
+
+  const bbqNav = [
     {
       href: "/admin/barbecue",
       label: "Barbecue Bookings",
       icon: ShoppingCart,
       description: "Manage Desert BBQ",
+    },
+    {
+      href: "/admin/barbecue/settings",
+      label: "BBQ Settings",
+      icon: Settings,
+      description: "BBQ Pricing & Add-ons",
     },
   ]
 
@@ -152,40 +161,82 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
 
           {/* Navigation Items */}
-          <nav className="flex-1 p-6 space-y-2">
-            {navigationItems.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
+          <nav className="flex-1 p-6 space-y-4">
+            <div>
+              <div className="px-4 pb-2 text-xs uppercase tracking-widest text-[#3C2317]/60">Camping</div>
+              <div className="space-y-2">
+                {campingNav.map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={cn(
+                        "flex items-center space-x-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group",
+                        isActive
+                          ? "bg-gradient-to-r from-[#3C2317] to-[#5D4037] text-[#FBF9D9] shadow-lg"
+                          : "text-[#3C2317] hover:bg-[#D3B88C]/30 hover:shadow-md",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300",
+                          isActive ? "bg-[#FBF9D9]/20" : "bg-[#D3B88C]/20 group-hover:bg-[#D3B88C]/40",
+                        )}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold">{item.label}</div>
+                        <div className={cn("text-xs opacity-80", isActive ? "text-[#FBF9D9]/80" : "text-[#3C2317]/60")}>
+                          {item.description}
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setSidebarOpen(false)}
-                  className={cn(
-                    "flex items-center space-x-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group",
-                    isActive
-                      ? "bg-gradient-to-r from-[#3C2317] to-[#5D4037] text-[#FBF9D9] shadow-lg"
-                      : "text-[#3C2317] hover:bg-[#D3B88C]/30 hover:shadow-md",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300",
-                      isActive ? "bg-[#FBF9D9]/20" : "bg-[#D3B88C]/20 group-hover:bg-[#D3B88C]/40",
-                    )}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold">{item.label}</div>
-                    <div className={cn("text-xs opacity-80", isActive ? "text-[#FBF9D9]/80" : "text-[#3C2317]/60")}>
-                      {item.description}
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
+            <div className="pt-2">
+              <div className="px-4 pb-2 text-xs uppercase tracking-widest text-[#3C2317]/60">Barbecue</div>
+              <div className="space-y-2">
+                {bbqNav.map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setSidebarOpen(false)}
+                      className={cn(
+                        "flex items-center space-x-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group",
+                        isActive
+                          ? "bg-gradient-to-r from-[#3C2317] to-[#5D4037] text-[#FBF9D9] shadow-lg"
+                          : "text-[#3C2317] hover:bg-[#D3B88C]/30 hover:shadow-md",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300",
+                          isActive ? "bg-[#FBF9D9]/20" : "bg-[#D3B88C]/20 group-hover:bg-[#D3B88C]/40",
+                        )}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-semibold">{item.label}</div>
+                        <div className={cn("text-xs opacity-80", isActive ? "text-[#FBF9D9]/80" : "text-[#3C2317]/60")}>
+                          {item.description}
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
           </nav>
 
           {/* User Info & Logout */}

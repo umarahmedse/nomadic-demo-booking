@@ -20,9 +20,9 @@ type BarbecueGroupSize = 10 | 15 | 20
 
 const DEFAULT_SETTINGS = {
   groupPrices: {
-    10: 1500,
-    15: 2000,
-    20: 2500,
+    10: 1497,
+    15: 1697,
+    20: 1897,
   },
   vatRate: 0.05,
   addOnPrices: {
@@ -60,7 +60,7 @@ const calculateBarbecuePrice = (
   settings: Settings,
 ) => {
   const basePrice = settings.groupPrices[groupSize]
-  
+
   let addOnsTotal = 0
   if (addOns.charcoal) addOnsTotal += settings.addOnPrices.charcoal
   if (addOns.firewood) addOnsTotal += settings.addOnPrices.firewood
@@ -131,9 +131,7 @@ export default function BarbecueBookingPage() {
   })
 
   const [selectedCustomAddOns, setSelectedCustomAddOns] = useState<string[]>([])
-  const [pricing, setPricing] = useState(
-    calculateBarbecuePrice(10, formData.addOns, [], DEFAULT_SETTINGS)
-  )
+  const [pricing, setPricing] = useState(calculateBarbecuePrice(10, formData.addOns, [], DEFAULT_SETTINGS))
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [touched, setTouched] = useState<Record<string, boolean>>({})
@@ -285,12 +283,7 @@ export default function BarbecueBookingPage() {
       selected: selectedCustomAddOns.includes(addon.id),
     }))
 
-    const newPricing = calculateBarbecuePrice(
-      formData.groupSize,
-      formData.addOns,
-      selectedCustomAddOns,
-      settings
-    )
+    const newPricing = calculateBarbecuePrice(formData.groupSize, formData.addOns, selectedCustomAddOns, settings)
     setPricing(newPricing)
   }, [formData.groupSize, formData.addOns, selectedCustomAddOns, settings])
 
@@ -583,7 +576,7 @@ export default function BarbecueBookingPage() {
             <div className="lg:col-span-3">
               <div className="relative w-full h-[300px] md:h-[420px] rounded-xl overflow-hidden shadow-xl group">
                 <Image
-                  src={campingImages[currentImageIndex].src}
+                  src={campingImages[currentImageIndex].src || "/placeholder.svg"}
                   alt={campingImages[currentImageIndex].alt}
                   fill
                   className="object-cover object-center transition-transform duration-700 group-hover:scale-105"
@@ -600,7 +593,7 @@ export default function BarbecueBookingPage() {
                   onClick={() => setCurrentImageIndex(index + 1)}
                 >
                   <Image
-                    src={image.src}
+                    src={image.src || "/placeholder.svg"}
                     alt={image.alt}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -620,25 +613,28 @@ export default function BarbecueBookingPage() {
                 <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-[#3C2317] mb-3 flex items-center gap-2">
                   Nomadic Desert Barbecue Setup 🍖
                 </h1>
-                <p className="text-[#3C2317]/80 text-sm mb-4">The UAE's ultimate BBQ experience</p>
+                <p className="text-sm text-[#3C2317]/80 max-w-3xl text-pretty leading-relaxed mb-4">
+                  Ever wanted to BBQ in the Dubai desert without the hassle of setting everything up? Nomadic’s Ultimate
+                  Desert BBQ Setup is fully prepared before you arrive — enjoy sunset views, fire lanterns, and a
+                  private setup for your group.
+                </p>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex items-center space-x-1 text-[#3C2317]/80">
                     <MapPin className="w-4 h-4 text-[#D3B88C]" />
                     <span className="text-sm font-medium">40 minutes from Dubai</span>
                   </div>
                 </div>
-                <p className="text-sm text-[#3C2317]/80 max-w-3xl text-pretty leading-relaxed mb-4">
-                  Setup location: 40 minutes from Dubai. Arrival time fixed at 6:00 PM. One setup per day. Experience an unforgettable desert BBQ with all equipment provided and professionally set up before you arrive.
-                </p>
                 <p className="hidden sm:block text-sm text-[#3C2317]/80 max-w-3xl text-pretty leading-relaxed">
-                  Perfect for groups of 10 to 20 people. We handle all the setup, so you can focus on enjoying your time with friends and family under the desert stars.
+                  Perfect for groups of 10 to 20 people. We handle all the setup, so you can focus on enjoying your time
+                  with friends and family under the desert stars.
                 </p>
                 <div className="block sm:hidden">
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="details">
                       <AccordionTrigger className="text-[#3C2317] text-base">Read full details</AccordionTrigger>
                       <AccordionContent className="text-[#3C2317]/80 text-sm leading-relaxed bg-[#E6CFA9]/30 rounded-md p-3">
-                        Perfect for groups of 10 to 20 people. We handle all the setup, so you can focus on enjoying your time with friends and family under the desert stars.
+                        Perfect for groups of 10 to 20 people. We handle all the setup, so you can focus on enjoying
+                        your time with friends and family under the desert stars.
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
@@ -685,12 +681,12 @@ export default function BarbecueBookingPage() {
 
                   <ol className="space-y-6">
                     {[
-                      "Arrival at meeting point (6:00 PM - fixed time).",
-                      "Meet your setup leader and transfer to BBQ location.",
-                      "Complete BBQ setup walkthrough & safety briefing.",
-                      "Enjoy your BBQ, fire pit, and desert evening at leisure.",
-                      "Relaxed departure anytime you're ready.",
-                      "Take all trash with you #LeaveNoTrace",
+                      "Arrival at Meeting Point (18:00 – see confirmation email upon booking).",
+                      "Park and Transfer, or Drive Your Own 4x4.",
+                      "Setup Walkthrough & Safety Briefing.",
+                      "Enjoy Your Nomadic Desert BBQ Experience.",
+                      "Departure (Anytime up to Midnight).",
+                      "Take all trash with you to keep nature pristine #LeaveNoTrace.",
                     ].map((step, idx, arr) => (
                       <li key={idx} className="relative flex gap-4 text-xs text-[#3C2317]/90 leading-relaxed">
                         <span className="relative z-10 flex h-7 w-7 items-center justify-center rounded-full bg-[#3C2317] text-[#FBF9D9] text-xs font-bold ring-1 ring-[#D3B88C]">
@@ -721,35 +717,40 @@ export default function BarbecueBookingPage() {
                     {[
                       {
                         title: "Fixed Arrival Time",
-                        content: "6:00 PM sharp - one BBQ setup per day to ensure exclusivity.",
+                        content: "6:00 PM sharp — one BBQ setup per day for exclusivity.",
                       },
                       {
                         title: "Getting there",
-                        content: "Meeting point is 40 minutes from Dubai. Exact location shared upon booking.",
+                        content:
+                          "Desert area is ~40 minutes from Dubai (Al Qudra). Saloon cars may find soft sand difficult.",
                       },
                       {
                         title: "Don't have a 4x4?",
                         content:
-                          "Park at the meeting point - our team will transfer you and your belongings to the BBQ site.",
+                          "Park at the meeting point — our team will transfer you and your belongings to your setup.",
                       },
                       {
-                        title: "Driving a 4x4?",
-                        content: "You can head straight to the BBQ setup and follow our team leader.",
+                        title: "Have a 4x4?",
+                        content: "You can drive directly to your private setup and follow our team leader.",
                       },
                       {
-                        title: "Group Size",
-                        content: "Choose from 10, 15, or 20 people. Perfect for family gatherings and friend reunions.",
+                        title: "Meeting point",
+                        content: "You’ll receive a Google Maps pin by email once your booking is confirmed.",
+                      },
+                      {
+                        title: "Clothing",
+                        content: "Bring warm jumpers for evenings, especially in Dec–Jan. The campfire keeps you cozy.",
+                      },
+                      {
+                        title: "Environment",
+                        content: "Help us #LeaveNoTrace. Bin bags provided; please take all trash with you.",
                       },
                       {
                         title: "What to bring",
                         content:
-                          "Food & drinks, Charcoal & firewood (or book as add-ons), Power bank if needed.",
+                          "BBQ food & drinks, Charcoal & firewood (or book as add-ons), Power bank (generators on request: 250 AED + VAT).",
                       },
-                      {
-                        title: "Environment",
-                        content:
-                          "Help us preserve these incredible landscapes. Please take all trash with you. Bin bags provided. #LeaveNoTrace",
-                      },
+                      { title: "Duration & Timing", content: "Standard setup time is 6:00 PM — up to midnight." },
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full ring-1 ring-[#D3B88C] text-[#3C2317] flex-shrink-0">
@@ -801,12 +802,12 @@ export default function BarbecueBookingPage() {
                 <CardContent className="px-2 sm:px-3 lg:px-4 py-3 sm:py-3 lg:py-3 ">
                   <ul className="divide-y divide-[#3C2317]/15 text-xs text-[#3C2317]">
                     {[
-                      "Private Desert BBQ Setup",
-                      "Complete BBQ Equipment Provided",
-                      "Fixed 6:00 PM Arrival Time",
-                      "Perfect for 10-20 People",
-                      "Fire Pit & Seating Area Included",
-                      "Professional Setup & Teardown",
+                      "Private Desert BBQ Setup – Exclusive to Your Group",
+                      "Fully Prepared BBQ Experience (No Setup Required)",
+                      "Relaxed Floor Seating, Chairs & Ambient Lighting",
+                      "Complete BBQ Equipment & Cooking Essentials Included",
+                      "Ideal for Groups of 10, 15, or 20 People",
+                      "Enjoy a Magical Sunset-to-Night BBQ Under the Stars",
                     ].map((item, i) => (
                       <li key={i} className="py-1 sm:py-1.5 flex items-start">
                         <span className="mr-1.5 text-[#3C2317]/80 flex-shrink-0 mt-0.5">✓</span>
@@ -828,14 +829,19 @@ export default function BarbecueBookingPage() {
                   <CardContent className="px-2 sm:px-3 lg:px-4 py-3 sm:py-3 lg:py-3">
                     <ul className="divide-y divide-[#3C2317]/15 text-xs text-[#3C2317]">
                       {[
-                        "Raised BBQ grill with all tools",
-                        "Fire pit with firelighters & lighter",
-                        "Comfortable seating area with chairs",
-                        "Outdoor lighting for evening ambiance",
-                        "Cooking utensils & serving tools",
-                        "Plates, cutlery & serving dishes",
-                        "Cooler box for drinks",
-                        "Complete setup & teardown service",
+                        "Floor seating & cushions",
+                        "Camping chairs (per person)",
+                        "Outdoor lighting & fire lanterns (with fuel)",
+                        "Raised BBQ & raised fire pit",
+                        "Firelighters & lighter",
+                        "Gas stove with butane gas",
+                        "Cooking pots & frying pan",
+                        "Raised table",
+                        "Cooler box (ice not included)",
+                        "Picnic basket",
+                        "Plates, cutlery & cups",
+                        "Cooking utensils",
+                        "Bin & bin liners",
                       ].map((item, i) => (
                         <li key={i} className="py-1 sm:py-1.5 flex items-start">
                           <span className="mr-1.5 text-[#3C2317]/80 flex-shrink-0 mt-0.5">✓</span>
@@ -994,9 +1000,7 @@ export default function BarbecueBookingPage() {
                   </CardHeader>
                   <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 !pt-0">
                     <div className="space-y-2">
-                      <Label className="text-[#3C2317] font-semibold text-xs sm:text-sm">
-                        Select Group Size *
-                      </Label>
+                      <Label className="text-[#3C2317] font-semibold text-xs sm:text-sm">Select Group Size *</Label>
                       <div className="grid grid-cols-3 gap-3">
                         {[10, 15, 20].map((size) => (
                           <Button
@@ -1008,7 +1012,7 @@ export default function BarbecueBookingPage() {
                               "rounded-lg cursor-pointer transition-all duration-300",
                               formData.groupSize === size
                                 ? "bg-[#3C2317] text-[#FBF9D9] hover:bg-[#3C2317]/90"
-                                : "border-2 border-[#D3B88C] hover:border-[#3C2317] hover:bg-[#D3B88C]/20"
+                                : "border-2 border-[#D3B88C] hover:border-[#3C2317] hover:bg-[#D3B88C]/20",
                             )}
                           >
                             Up to {size}
@@ -1018,17 +1022,21 @@ export default function BarbecueBookingPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-[#3C2317] font-semibold text-xs sm:text-sm">
-                        Arrival Time
-                      </Label>
+                      <Label className="text-[#3C2317] font-semibold text-xs sm:text-sm">Arrival Time</Label>
                       <div className="mt-2">
-                        <Button type="button" variant="default" disabled className="bg-[#3C2317] text-[#FBF9D9] rounded-xl w-full sm:w-auto">
+                        <Button
+                          type="button"
+                          variant="default"
+                          disabled
+                          className="bg-[#3C2317] text-[#FBF9D9] rounded-xl w-full sm:w-auto"
+                        >
                           6:00 PM (Fixed)
                         </Button>
                       </div>
                       <div className="mt-2 p-2 bg-[#E6CFA9]/40 border border-[#D3B88C]/40 rounded-lg">
                         <p className="text-[#3C2317] text-xs">
-                          <strong>Note:</strong> Arrival time is fixed at 6:00 PM. One BBQ setup per day for exclusivity.
+                          <strong>Note:</strong> Arrival time is fixed at 6:00 PM. One BBQ setup per day for
+                          exclusivity.
                         </p>
                       </div>
                     </div>
@@ -1365,9 +1373,7 @@ export default function BarbecueBookingPage() {
                         <span className="text-[#FBF9D9] text-xs font-bold">{formData.groupSize}</span>
                       </div>
                       <div>
-                        <span className="text-[#3C2317] font-semibold text-xs sm:text-sm">
-                          Group Size
-                        </span>
+                        <span className="text-[#3C2317] font-semibold text-xs sm:text-sm">Group Size</span>
                         <p className="text-[#3C2317]/70 text-xs">Up to {formData.groupSize} people</p>
                       </div>
                     </div>
@@ -1480,9 +1486,7 @@ export default function BarbecueBookingPage() {
                         <span className="text-[11px] sm:text-xs text-[#3C2317]/90 flex items-center gap-2">
                           ⏰ Arrival Time
                         </span>
-                        <span className="font-semibold text-[11px] sm:text-xs text-[#3C2317]">
-                          6:00 PM (Fixed)
-                        </span>
+                        <span className="font-semibold text-[11px] sm:text-xs text-[#3C2317]">6:00 PM (Fixed)</span>
                       </div>
                     </div>
                   </div>
