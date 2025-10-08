@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
       collection: "barbecue_bookings", // help webhook route collection
     }
 
+    const origin = new URL(request.url).origin
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       metadata,
@@ -35,8 +37,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: "payment",
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/barbecue/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/barbecue/failed?cancelled=true`,
+      success_url: `${origin}/barbecue/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/barbecue/failed?cancelled=true`,
       customer_email: customerEmail,
     })
 
