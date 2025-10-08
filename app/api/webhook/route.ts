@@ -4,6 +4,7 @@ import Stripe from "stripe"
 import { getDatabase } from "@/lib/mongodb"
 import { ObjectId } from "mongodb"
 import { sendBookingConfirmation, sendAdminNotification } from "@/lib/email"
+import { sendBarbecueAdminNotification, sendBarbecueBookingConfirmation } from "@/lib/email-barbecue"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-08-27.basil",
@@ -54,9 +55,7 @@ export async function POST(request: NextRequest) {
           if (booking) {
             try {
               if (collection === "barbecue_bookings") {
-                const { sendBarbecueAdminNotification, sendBarbecueBookingConfirmation } = await import(
-                  "@/lib/email-barbecue"
-                )
+               
                 await sendBarbecueBookingConfirmation(booking)
                 await sendBarbecueAdminNotification(booking)
               } else {
