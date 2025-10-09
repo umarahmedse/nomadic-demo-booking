@@ -29,8 +29,7 @@ export async function sendBarbecueBookingConfirmation(booking: any) {
     
     <h4 style="color:#3C2317;margin-top:15px;margin-bottom:8px;">Getting There</h4>
     <ul style="margin:0 0 15px 0;padding-left:20px;">
-      <li>Desert locations can be difficult for saloon cars.</li>
-      <li><strong>Don't have a 4x4?</strong> Park at the meeting point - our team will transfer you and your belongings to your setup.</li>
+      <li>Park at the meeting point - our team will transfer you and your belongings to your setup.</li>
       <li><strong>Have a 4x4?</strong> You can drive directly to your setup.</li>
     </ul>
 
@@ -161,9 +160,6 @@ export async function sendBarbecueBookingConfirmation(booking: any) {
 
           ${infoSection}
 
-          <div style="text-align:center;margin-top:24px;">
-            <a href="https://nomadic.ae" style="display:inline-block;background:linear-gradient(90deg,#1B8F5A,#2BC480);color:white;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">View Your Booking</a>
-          </div>
 
           ${footer}
         </div>
