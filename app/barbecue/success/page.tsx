@@ -95,7 +95,7 @@ export default function BookingSuccessPage() {
             Nomadic {isBBQBooking ? "BBQ" : "Booking"} <span className="text-[#D3B88C]">Confirmed!</span>
           </h1>
           <p className="text-base text-[#3C2317]/80">
-            Thank you for choosing Nomadic. Your {isBBQBooking ? "BBQ setup" : "camping rental setup"} is booked and confirmed🎉
+            Thank you for choosing Nomadic. Your {isBBQBooking ? "BBQ setup" : "camping rental setup"} is booked and confirmed 🎉
           </p>
         </div>
 
