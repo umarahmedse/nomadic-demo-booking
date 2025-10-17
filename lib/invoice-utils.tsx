@@ -1,23 +1,3 @@
-export async function generateInvoicePDF(invoiceData: any, booking: any, bookingType: "camping" | "barbecue") {
-  // Create a simple HTML representation that can be printed
-  const invoiceHTML = generateInvoiceHTML(invoiceData, booking, bookingType)
-
-  // Create a new window for printing
-  const printWindow = window.open("", "", "width=800,height=600")
-  if (!printWindow) {
-    throw new Error("Failed to open print window")
-  }
-
-  printWindow.document.write(invoiceHTML)
-  printWindow.document.close()
-
-  // Wait for content to load, then print
-  setTimeout(() => {
-    printWindow.print()
-    printWindow.close()
-  }, 250)
-}
-
 function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string): string {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-GB", {
@@ -25,6 +5,39 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
       month: "long",
       year: "numeric",
     })
+  }
+
+  const formatAddOns = (addOns: any) => {
+    if (!addOns || Object.keys(addOns).length === 0) return '<em style="color:#8B6E58;">None</em>';
+    
+    const list = Object.entries(addOns)
+      .filter(([_, value]) => value)
+      .map(([key]) => {
+        const label = key === "charcoal" ? "🔥 Charcoal" 
+          : key === "firewood" ? "🪵 Firewood"
+          : key === "portableToilet" ? "🚻 Portable Toilet"
+          : key;
+        return label;
+      })
+      .join(", ");
+    
+    return list || '<em style="color:#8B6E58;">None</em>';
+  }
+
+  const formatSleeping = (arrangements: any[]) => {
+    if (!arrangements?.length) return '<em style="color:#8B6E58;">Not specified</em>';
+    
+    const filtered = arrangements.filter((a) => a.arrangement !== "custom");
+    if (!filtered.length) return '<em style="color:#8B6E58;">Not specified</em>';
+    
+    return filtered.map(a => {
+      const arr = a.arrangement === "all-singles" ? "All Single Beds (4 singles)"
+        : a.arrangement === "two-doubles" ? "Two Double Beds (2 doubles)"
+        : a.arrangement === "mix" ? "Mixed (1 double + 2 singles)"
+        : a.arrangement === "double-bed" ? "Double Bed (1 double)"
+        : a.arrangement;
+      return `Tent ${a.tentNumber}: ${arr}`;
+    }).join("<br>");
   }
 
   return `
@@ -35,28 +48,50 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
         <title>${invoiceData.invoiceNumber}</title>
         <style>
           body {
-            font-family: Arial, sans-serif;
-            padding: 40px;
-            color: #3C2317;
+            font-family: 'Inter', Arial, sans-serif;
+            padding: 0;
             margin: 0;
+            color: #3C2317;
+            background-color: #FFF7E8;
+          }
+          .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
           }
           .header {
+            background: linear-gradient(135deg, #D2A679, #F6E4C1);
+            padding: 30px 40px;
             display: flex;
             justify-content: space-between;
-            align-items: start;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #D3B88C;
+            align-items: center;
+          }
+          .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+          }
+          .logo {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 10px;
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
           }
           .company-info h1 {
             margin: 0;
-            font-size: 32px;
+            font-size: 28px;
             color: #3C2317;
+            font-weight: 700;
           }
           .company-info p {
-            margin: 5px 0 0 0;
+            margin: 3px 0 0 0;
             color: #3C2317;
-            opacity: 0.7;
+            opacity: 0.8;
             font-size: 14px;
           }
           .invoice-title {
@@ -64,82 +99,134 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
           }
           .invoice-title h2 {
             margin: 0;
-            font-size: 28px;
+            font-size: 32px;
             color: #3C2317;
+            font-weight: 700;
           }
           .invoice-title p {
             margin: 5px 0 0 0;
             color: #3C2317;
             opacity: 0.7;
-            font-size: 14px;
+            font-size: 13px;
+            font-weight: 500;
           }
-          .details {
+          .content {
+            padding: 40px;
+          }
+          .details-grid {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #FFF9F0;
+            border: 1px solid #EADAC1;
+            border-radius: 10px;
           }
           .bill-to h3 {
-            margin: 0 0 15px 0;
-            font-weight: bold;
+            margin: 0 0 12px 0;
+            font-weight: 600;
             color: #3C2317;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
           }
           .bill-to p {
-            margin: 0;
+            margin: 5px 0;
             font-size: 14px;
             color: #3C2317;
-            opacity: 0.8;
             line-height: 1.6;
           }
           .dates {
             text-align: right;
-            font-size: 13px;
           }
           .date-item {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
           }
           .date-label {
-            color: #3C2317;
-            opacity: 0.7;
+            color: #8B6E58;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
           }
           .date-value {
             margin: 3px 0 0 0;
-            font-weight: bold;
+            font-weight: 600;
+            color: #3C2317;
+            font-size: 14px;
+          }
+          .info-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #FDF7EC;
+            border: 1px solid #EADAC1;
+            border-radius: 10px;
+          }
+          .info-section h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: #3C2317;
+            font-weight: 600;
+          }
+          .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            font-size: 14px;
+          }
+          .info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .info-label {
+            color: #8B6E58;
+            font-weight: 600;
+          }
+          .info-value {
             color: #3C2317;
           }
           table {
             width: 100%;
             margin-bottom: 30px;
             border-collapse: collapse;
+            border: 1px solid #EADAC1;
+            border-radius: 10px;
+            overflow: hidden;
           }
           thead tr {
-            border-bottom: 2px solid #D3B88C;
-            background-color: #FBF9D9;
+            background: linear-gradient(90deg, #E5C79E, #F7E8C9);
           }
           th {
             text-align: left;
-            padding: 12px;
+            padding: 14px;
             color: #3C2317;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 14px;
           }
           tbody tr {
-            border-bottom: 1px solid #D3B88C;
+            border-bottom: 1px solid #EADAC1;
+          }
+          tbody tr:last-child {
+            border-bottom: none;
           }
           td {
-            padding: 12px;
+            padding: 14px;
             color: #3C2317;
+            font-size: 14px;
           }
           .description {
-            font-weight: bold;
+            font-weight: 600;
           }
           .description-detail {
             font-size: 12px;
-            color: #3C2317;
-            opacity: 0.7;
-            margin-top: 3px;
+            color: #8B6E58;
+            margin-top: 4px;
+            line-height: 1.5;
           }
           .amount {
             text-align: right;
-            font-weight: bold;
+            font-weight: 600;
           }
           .totals {
             display: flex;
@@ -147,156 +234,251 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
             margin-bottom: 30px;
           }
           .totals-box {
-            width: 300px;
+            width: 350px;
+            border: 1px solid #EADAC1;
+            border-radius: 10px;
+            overflow: hidden;
           }
           .total-row {
             display: flex;
             justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #D3B88C;
+            padding: 12px 16px;
+            border-bottom: 1px solid #EADAC1;
             color: #3C2317;
+            font-size: 14px;
+          }
+          .total-row:last-child {
+            border-bottom: none;
+          }
+          .total-row.subtotal {
+            background: #FDF7EC;
           }
           .total-row.final {
-            padding: 12px;
-            background-color: #FBF9D9;
-            border-radius: 4px;
-            font-weight: bold;
+            background: linear-gradient(90deg, #1B8F5A, #2BC480);
+            color: white;
+            font-weight: 700;
             font-size: 16px;
-            border: none;
           }
           .total-row.final .amount {
-            color: #0891b2;
+            color: white;
           }
-          .notes {
+          .payment-status {
+            padding: 20px;
+            background: #FFF9F0;
+            border: 1px solid #EADAC1;
+            border-radius: 10px;
             margin-bottom: 30px;
-            padding: 15px;
-            background-color: #FBF9D9;
-            border-radius: 4px;
-            border: 1px solid #D3B88C;
+            text-align: center;
           }
-          .notes h4 {
-            margin: 0 0 10px 0;
-            color: #3C2317;
-            font-weight: bold;
+          .payment-status.paid {
+            background: #E8F5E9;
+            border-color: #2BC480;
           }
-          .notes p {
+          .payment-status.unpaid {
+            background: #FFF3E0;
+            border-color: #FF9800;
+          }
+          .payment-status-text {
+            font-size: 16px;
+            font-weight: 600;
             margin: 0;
+          }
+          .terms {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #FFF9F0;
+            border: 1px solid #EADAC1;
+            border-radius: 10px;
+          }
+          .terms h4 {
+            margin: 0 0 12px 0;
+            color: #3C2317;
+            font-weight: 600;
+            font-size: 14px;
+          }
+          .terms p {
+            margin: 6px 0;
             color: #3C2317;
             opacity: 0.8;
-            font-size: 13px;
-            white-space: pre-wrap;
+            font-size: 12px;
+            line-height: 1.6;
           }
           .footer {
-            border-top: 2px solid #D3B88C;
-            padding-top: 20px;
+            border-top: 1px solid #EADAC1;
+            padding: 25px 40px;
             text-align: center;
-            font-size: 12px;
+            background: #FDF7EC;
+          }
+          .footer-brand {
+            font-weight: 600;
+            font-size: 15px;
             color: #3C2317;
-            opacity: 0.7;
+            margin: 0 0 5px 0;
           }
-          .footer p {
-            margin: 0;
+          .footer-license {
+            font-size: 12px;
+            color: #8B6E58;
+            margin: 3px 0;
           }
-          .footer p:first-child {
-            margin-bottom: 10px;
+          .footer-contact {
+            font-size: 12px;
+            color: #8B6E58;
+            margin: 3px 0;
           }
-          .footer p:last-child {
-            margin-top: 5px;
+          .footer-address {
+            font-size: 11px;
+            color: #8B6E58;
+            margin: 8px 0 0 0;
           }
           @media print {
             body {
-              padding: 0;
+              background: white;
+            }
+            .container {
+              margin: 0;
+              box-shadow: none;
             }
           }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="company-info">
-            <h1>NOMADIC</h1>
-            <p>Glamping & Desert Experiences</p>
+        <div class="container">
+          <div class="header">
+            <div class="logo-section">
+              <img src="/logo.png" alt="Nomadic Logo" class="logo" onerror="this.style.display='none'">
+              <div class="company-info">
+                <h1>NOMADIC بدوي</h1>
+                <p>Glamping & Desert Experiences</p>
+              </div>
+            </div>
+            <div class="invoice-title">
+              <h2>INVOICE</h2>
+              <p>${invoiceData.invoiceNumber}</p>
+            </div>
           </div>
-          <div class="invoice-title">
-            <h2>INVOICE</h2>
-            <p>${invoiceData.invoiceNumber}</p>
-          </div>
-        </div>
 
-        <div class="details">
-          <div class="bill-to">
-            <h3>Bill To:</h3>
-            <p><strong>${invoiceData.customerName}</strong></p>
-            <p>${invoiceData.customerEmail}</p>
-            <p>${invoiceData.customerPhone}</p>
-          </div>
-          <div class="dates">
-            <div class="date-item">
-              <div class="date-label">Invoice Date:</div>
-              <div class="date-value">${formatDate(invoiceData.invoiceDate)}</div>
-            </div>
-            <div class="date-item">
-              <div class="date-label">Due Date:</div>
-              <div class="date-value">${formatDate(invoiceData.dueDate)}</div>
-            </div>
-            <div class="date-item">
-              <div class="date-label">Booking Date:</div>
-              <div class="date-value">${formatDate(invoiceData.bookingDate)}</div>
-            </div>
-          </div>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Description</th>
-              <th style="text-align: right;">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <div class="description">${bookingType === "camping" ? "Desert Camping" : "Desert Barbecue"} Booking</div>
-                <div class="description-detail">
-                  ${booking.numberOfTents ? `${booking.numberOfTents} tent(s)` : `${booking.groupSize} people`}
+          <div class="content">
+            <div class="details-grid">
+              <div class="bill-to">
+                <h3>Bill To:</h3>
+                <p><strong>${invoiceData.customerName}</strong></p>
+                <p>📧 ${invoiceData.customerEmail}</p>
+                <p>📞 ${invoiceData.customerPhone}</p>
+              </div>
+              <div class="dates">
+                <div class="date-item">
+                  <div class="date-label">Invoice Date</div>
+                  <div class="date-value">${formatDate(invoiceData.invoiceDate)}</div>
                 </div>
-              </td>
-              <td class="amount">AED ${invoiceData.subtotal.toFixed(2)}</td>
-            </tr>
-          </tbody>
-        </table>
+                <div class="date-item">
+                  <div class="date-label">Due Date</div>
+                  <div class="date-value">${formatDate(invoiceData.dueDate)}</div>
+                </div>
+              </div>
+            </div>
 
-        <div class="totals">
-          <div class="totals-box">
-            <div class="total-row">
-              <span>Subtotal:</span>
-              <span class="amount">AED ${invoiceData.subtotal.toFixed(2)}</span>
+            <div class="info-section">
+              <h3>Booking Details</h3>
+              <div class="info-grid">
+                <div class="info-row">
+                  <span class="info-label">📅 Date:</span>
+                  <span class="info-value">${formatDate(invoiceData.bookingDate)}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">📍 Location:</span>
+                  <span class="info-value">${booking.location}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">🕓 Arrival:</span>
+                  <span class="info-value">${booking.arrivalTime}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">👨‍👩‍👧 Guests:</span>
+                  <span class="info-value">${booking.adults} adults${booking.children ? `, ${booking.children} children` : ""}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">⛺ Tents:</span>
+                  <span class="info-value">${booking.numberOfTents}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">🛏️ Sleeping:</span>
+                  <span class="info-value">${formatSleeping(booking.sleepingArrangements)}</span>
+                </div>
+              </div>
+              <div style="margin-top: 12px;">
+                <span class="info-label">Add-ons:</span>
+                <span class="info-value">${formatAddOns(booking.addOns)}</span>
+              </div>
             </div>
-            <div class="total-row">
-              <span>VAT (5%):</span>
-              <span class="amount">AED ${invoiceData.vat.toFixed(2)}</span>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th style="text-align: right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="description">${bookingType === "camping" ? "Desert Camping Experience" : "Desert Barbecue Experience"}</div>
+                    <div class="description-detail">
+                      ${booking.numberOfTents ? `${booking.numberOfTents} tent(s) for ${booking.adults} adults${booking.children ? ` and ${booking.children} children` : ""}` : `${booking.groupSize} people`}<br>
+                      Location: ${booking.location} | Arrival: ${booking.arrivalTime}
+                    </div>
+                  </td>
+                  <td class="amount">AED ${invoiceData.subtotal.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="totals">
+              <div class="totals-box">
+                <div class="total-row subtotal">
+                  <span>Subtotal:</span>
+                  <span class="amount">AED ${invoiceData.subtotal.toFixed(2)}</span>
+                </div>
+                <div class="total-row">
+                  <span>VAT (5%):</span>
+                  <span class="amount">AED ${invoiceData.vat.toFixed(2)}</span>
+                </div>
+                <div class="total-row final">
+                  <span>TOTAL DUE:</span>
+                  <span class="amount">AED ${invoiceData.total.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
-            <div class="total-row final">
-              <span>Total:</span>
-              <span class="amount">AED ${invoiceData.total.toFixed(2)}</span>
+
+            <div class="payment-status ${booking.isPaid ? 'paid' : 'unpaid'}">
+              <p class="payment-status-text">
+                ${booking.isPaid ? '✅ PAID' : '⏳ PAYMENT PENDING'}
+              </p>
+            </div>
+
+            ${invoiceData.notes ? `
+            <div class="terms">
+              <h4>Additional Notes:</h4>
+              <p>${invoiceData.notes}</p>
+            </div>
+            ` : ''}
+
+            <div class="terms">
+              <h4>Invoice Terms & Conditions:</h4>
+              <p>• This is a digitally generated invoice and does not require a physical signature.</p>
+              <p>• This invoice was generated on request for the booking reference ${invoiceData.invoiceNumber}.</p>
+              <p>• Payment must be received by the due date specified above.</p>
+              <p>• All prices are in UAE Dirhams (AED) and include 5% VAT where applicable.</p>
+              <p>• This invoice is issued by Badawi Leisure & Sport Equipment Rental (License No: 979490).</p>
+              <p>• For any queries regarding this invoice, please contact us at yalla@nomadic.ae or +971 58 527 1420.</p>
             </div>
           </div>
-        </div>
 
-        ${
-          invoiceData.notes
-            ? `
-        <div class="notes">
-          <h4>Notes:</h4>
-          <p>${invoiceData.notes}</p>
-        </div>
-      `
-            : ""
-        }
-
-        <div class="footer">
-          <p>Thank you for your business!</p>
-          <p>Nomadic - Glamping & Desert Experiences</p>
-          <p>📞 0585271420 | ✉️ yalla@nomadic.ae | 🌐 www.nomadic.ae</p>
+          <div class="footer">
+            <p class="footer-brand">Nomadic بدوي</p>
+            <p class="footer-license">Commercial Manager – Badawi Leisure & Sport Equipment Rental | License No: 979490</p>
+            <p class="footer-contact">📞 0585271420 | ✉️ yalla@nomadic.ae | 🌐 www.nomadic.ae</p>
+            <p class="footer-address">🏢 Empire Heights A, 9th Floor, Business Bay, Dubai</p>
+          </div>
         </div>
       </body>
     </html>
