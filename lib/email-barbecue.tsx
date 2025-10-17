@@ -180,7 +180,7 @@ export async function sendBarbecueAdminNotification(booking: any) {
 
   return transporter.sendMail({
     from: `"Nomadic Notifications" <${process.env.SMTP_USER}>`,
-    to: "bookings@nomadic.ae",
+    to: "umarahmedse@gmail.com",
     subject: `🔥 New Barbecue Booking – ${booking.customerName}`,
     html: `
       <div style="font-family:'Inter',Arial,sans-serif;background-color:#FFF7E8;color:#3C2317;max-width:700px;margin:auto;border-radius:16px;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,0.08);">
