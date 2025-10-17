@@ -1,44 +1,85 @@
-function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string): string {
+export async function generateInvoicePDF(
+  invoiceData: any,
+  booking: any,
+  bookingType: "camping" | "barbecue"
+) {
+  // Create a simple HTML representation that can be printed
+  const invoiceHTML = generateInvoiceHTML(invoiceData, booking, bookingType);
+
+  // Create a new window for printing
+  const printWindow = window.open("", "", "width=800,height=600");
+  if (!printWindow) {
+    throw new Error("Failed to open print window");
+  }
+
+  printWindow.document.write(invoiceHTML);
+  printWindow.document.close();
+
+  // Wait for content to load, then print
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 250);
+}
+function generateInvoiceHTML(
+  invoiceData: any,
+  booking: any,
+  bookingType: string
+): string {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "long",
       year: "numeric",
-    })
-  }
+    });
+  };
 
   const formatAddOns = (addOns: any) => {
-    if (!addOns || Object.keys(addOns).length === 0) return '<em style="color:#8B6E58;">None</em>';
-    
+    if (!addOns || Object.keys(addOns).length === 0)
+      return '<em style="color:#8B6E58;">None</em>';
+
     const list = Object.entries(addOns)
       .filter(([_, value]) => value)
       .map(([key]) => {
-        const label = key === "charcoal" ? "🔥 Charcoal" 
-          : key === "firewood" ? "🪵 Firewood"
-          : key === "portableToilet" ? "🚻 Portable Toilet"
-          : key;
+        const label =
+          key === "charcoal"
+            ? "🔥 Charcoal"
+            : key === "firewood"
+            ? "🪵 Firewood"
+            : key === "portableToilet"
+            ? "🚻 Portable Toilet"
+            : key;
         return label;
       })
       .join(", ");
-    
+
     return list || '<em style="color:#8B6E58;">None</em>';
-  }
+  };
 
   const formatSleeping = (arrangements: any[]) => {
-    if (!arrangements?.length) return '<em style="color:#8B6E58;">Not specified</em>';
-    
+    if (!arrangements?.length)
+      return '<em style="color:#8B6E58;">Not specified</em>';
+
     const filtered = arrangements.filter((a) => a.arrangement !== "custom");
-    if (!filtered.length) return '<em style="color:#8B6E58;">Not specified</em>';
-    
-    return filtered.map(a => {
-      const arr = a.arrangement === "all-singles" ? "All Single Beds (4 singles)"
-        : a.arrangement === "two-doubles" ? "Two Double Beds (2 doubles)"
-        : a.arrangement === "mix" ? "Mixed (1 double + 2 singles)"
-        : a.arrangement === "double-bed" ? "Double Bed (1 double)"
-        : a.arrangement;
-      return `Tent ${a.tentNumber}: ${arr}`;
-    }).join("<br>");
-  }
+    if (!filtered.length)
+      return '<em style="color:#8B6E58;">Not specified</em>';
+
+    return filtered
+      .map((a) => {
+        const arr =
+          a.arrangement === "all-singles"
+            ? "All Single Beds (4 singles)"
+            : a.arrangement === "two-doubles"
+            ? "Two Double Beds (2 doubles)"
+            : a.arrangement === "mix"
+            ? "Mixed (1 double + 2 singles)"
+            : a.arrangement === "double-bed"
+            ? "Double Bed (1 double)"
+            : a.arrangement;
+        return `Tent ${a.tentNumber}: ${arr}`;
+      })
+      .join("<br>");
+  };
 
   return `
     <!DOCTYPE html>
@@ -368,11 +409,15 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
               <div class="dates">
                 <div class="date-item">
                   <div class="date-label">Invoice Date</div>
-                  <div class="date-value">${formatDate(invoiceData.invoiceDate)}</div>
+                  <div class="date-value">${formatDate(
+                    invoiceData.invoiceDate
+                  )}</div>
                 </div>
                 <div class="date-item">
                   <div class="date-label">Due Date</div>
-                  <div class="date-value">${formatDate(invoiceData.dueDate)}</div>
+                  <div class="date-value">${formatDate(
+                    invoiceData.dueDate
+                  )}</div>
                 </div>
               </div>
             </div>
@@ -382,7 +427,9 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
               <div class="info-grid">
                 <div class="info-row">
                   <span class="info-label">📅 Date:</span>
-                  <span class="info-value">${formatDate(invoiceData.bookingDate)}</span>
+                  <span class="info-value">${formatDate(
+                    invoiceData.bookingDate
+                  )}</span>
                 </div>
                 <div class="info-row">
                   <span class="info-label">📍 Location:</span>
@@ -394,7 +441,9 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
                 </div>
                 <div class="info-row">
                   <span class="info-label">👨‍👩‍👧 Guests:</span>
-                  <span class="info-value">${booking.adults} adults${booking.children ? `, ${booking.children} children` : ""}</span>
+                  <span class="info-value">${booking.adults} adults${
+    booking.children ? `, ${booking.children} children` : ""
+  }</span>
                 </div>
                 <div class="info-row">
                   <span class="info-label">⛺ Tents:</span>
@@ -402,7 +451,9 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
                 </div>
                 <div class="info-row">
                   <span class="info-label">🛏️ Sleeping:</span>
-                  <span class="info-value">${formatSleeping(booking.sleepingArrangements)}</span>
+                  <span class="info-value">${formatSleeping(
+                    booking.sleepingArrangements
+                  )}</span>
                 </div>
               </div>
               <div style="margin-top: 12px;">
@@ -421,10 +472,26 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
               <tbody>
                 <tr>
                   <td>
-                    <div class="description">${bookingType === "camping" ? "Desert Camping Experience" : "Desert Barbecue Experience"}</div>
+                    <div class="description">${
+                      bookingType === "camping"
+                        ? "Desert Camping Experience"
+                        : "Desert Barbecue Experience"
+                    }</div>
                     <div class="description-detail">
-                      ${booking.numberOfTents ? `${booking.numberOfTents} tent(s) for ${booking.adults} adults${booking.children ? ` and ${booking.children} children` : ""}` : `${booking.groupSize} people`}<br>
-                      Location: ${booking.location} | Arrival: ${booking.arrivalTime}
+                      ${
+                        booking.numberOfTents
+                          ? `${booking.numberOfTents} tent(s) for ${
+                              booking.adults
+                            } adults${
+                              booking.children
+                                ? ` and ${booking.children} children`
+                                : ""
+                            }`
+                          : `${booking.groupSize} people`
+                      }<br>
+                      Location: ${booking.location} | Arrival: ${
+    booking.arrivalTime
+  }
                     </div>
                   </td>
                   <td class="amount">AED ${invoiceData.subtotal.toFixed(2)}</td>
@@ -436,7 +503,9 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
               <div class="totals-box">
                 <div class="total-row subtotal">
                   <span>Subtotal:</span>
-                  <span class="amount">AED ${invoiceData.subtotal.toFixed(2)}</span>
+                  <span class="amount">AED ${invoiceData.subtotal.toFixed(
+                    2
+                  )}</span>
                 </div>
                 <div class="total-row">
                   <span>VAT (5%):</span>
@@ -444,28 +513,36 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
                 </div>
                 <div class="total-row final">
                   <span>TOTAL DUE:</span>
-                  <span class="amount">AED ${invoiceData.total.toFixed(2)}</span>
+                  <span class="amount">AED ${invoiceData.total.toFixed(
+                    2
+                  )}</span>
                 </div>
               </div>
             </div>
 
-            <div class="payment-status ${booking.isPaid ? 'paid' : 'unpaid'}">
+            <div class="payment-status ${booking.isPaid ? "paid" : "unpaid"}">
               <p class="payment-status-text">
-                ${booking.isPaid ? '✅ PAID' : '⏳ PAYMENT PENDING'}
+                ${booking.isPaid ? "✅ PAID" : "⏳ PAYMENT PENDING"}
               </p>
             </div>
 
-            ${invoiceData.notes ? `
+            ${
+              invoiceData.notes
+                ? `
             <div class="terms">
               <h4>Additional Notes:</h4>
               <p>${invoiceData.notes}</p>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
 
             <div class="terms">
               <h4>Invoice Terms & Conditions:</h4>
               <p>• This is a digitally generated invoice and does not require a physical signature.</p>
-              <p>• This invoice was generated on request for the booking reference ${invoiceData.invoiceNumber}.</p>
+              <p>• This invoice was generated on request for the booking reference ${
+                invoiceData.invoiceNumber
+              }.</p>
               <p>• Payment must be received by the due date specified above.</p>
               <p>• All prices are in UAE Dirhams (AED) and include 5% VAT where applicable.</p>
               <p>• This invoice is issued by Badawi Leisure & Sport Equipment Rental (License No: 979490).</p>
@@ -482,5 +559,5 @@ function generateInvoiceHTML(invoiceData: any, booking: any, bookingType: string
         </div>
       </body>
     </html>
-  `
+  `;
 }
