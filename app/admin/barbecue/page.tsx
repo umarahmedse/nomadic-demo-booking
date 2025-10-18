@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { Calendar, DollarSign, Eye, AlertCircle, Trash2 } from "lucide-react"
+import { Calendar, DollarSign, Eye, AlertCircle, Trash2, Users, TrendingUp } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,10 +47,17 @@ export default function BarbecueOrdersPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalBookings, setTotalBookings] = useState(0)
+  const [stats, setStats] = useState({
+    totalBookings: 0,
+    paidBookings: 0,
+    totalRevenue: 0,
+    pendingBookings: 0,
+  })
   const itemsPerPage = 7
 
   useEffect(() => {
     fetchBookings()
+    fetchStats()
   }, [searchTerm, currentPage])
 
   const formatDate = (date: Date | string) =>
@@ -62,6 +69,18 @@ export default function BarbecueOrdersPage() {
     ) : (
       <Badge className="bg-amber-100 text-amber-800 border-amber-200 font-medium">Pending</Badge>
     )
+
+  const fetchStats = async () => {
+    try {
+      const response = await fetch("/api/barbecue/stats")
+      if (response.ok) {
+        const data = await response.json()
+        setStats(data)
+      }
+    } catch (e) {
+      console.error("Failed to fetch BBQ stats:", e)
+    }
+  }
 
   const fetchBookings = async () => {
     try {
@@ -100,6 +119,60 @@ export default function BarbecueOrdersPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--color-card)] to-[var(--color-card)]/60">
       <div className="max-w-7xl mx-auto p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-[#3C2317]">Total Bookings</CardTitle>
+              <div className="w-8 h-8 bg-gradient-to-br from-[#3C2317] to-[#5D4037] rounded-lg flex items-center justify-center">
+                <Calendar className="h-4 w-4 text-[#FBF9D9]" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-[#3C2317]">{stats.totalBookings}</div>
+              <p className="text-xs text-[#3C2317]/60 mt-1">Total BBQ bookings</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-[#3C2317]">Confirmed Bookings</CardTitle>
+              <div className="w-8 h-8 bg-gradient-to-br from-[#84cc16] to-[#65a30d] rounded-lg flex items-center justify-center">
+                <Users className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-[#84cc16]">{stats.paidBookings}</div>
+              <p className="text-xs text-[#3C2317]/60 mt-1">Paid and confirmed</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-[#3C2317]">Total Revenue</CardTitle>
+              <div className="w-8 h-8 bg-gradient-to-br from-[#0891b2] to-[#0e7490] rounded-lg flex items-center justify-center">
+                <DollarSign className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-[#0891b2]">AED {stats.totalRevenue.toFixed(2)}</div>
+              <p className="text-xs text-[#3C2317]/60 mt-1">From confirmed bookings</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl hover:shadow-2xl transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-[#3C2317]">Pending Bookings</CardTitle>
+              <div className="w-8 h-8 bg-gradient-to-br from-[#be123c] to-[#9f1239] rounded-lg flex items-center justify-center">
+                <TrendingUp className="h-4 w-4 text-white" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-[#be123c]">{stats.pendingBookings}</div>
+              <p className="text-xs text-[#3C2317]/60 mt-1">Awaiting payment</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card className="bg-white/90 backdrop-blur-sm border-[var(--color-border)]/50 shadow-lg mb-8">
           <CardHeader>
             <CardTitle className="text-[var(--color-foreground)] text-xl font-semibold">Barbecue Bookings</CardTitle>

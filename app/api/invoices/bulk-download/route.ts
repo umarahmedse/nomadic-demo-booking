@@ -6,7 +6,6 @@ export async function POST(request: NextRequest) {
     const { bookingType, startDate, endDate } = await request.json()
 
     const db = await getDatabase()
-
     const collectionName = bookingType === "camping" ? "bookings" : "barbecue_bookings"
 
     // Fetch bookings within date range
@@ -25,7 +24,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No bookings found for the selected date range" }, { status: 404 })
     }
 
-    // Create CSV content instead of ZIP
     const csvContent = generateCSV(bookings, bookingType)
 
     return new NextResponse(csvContent, {
