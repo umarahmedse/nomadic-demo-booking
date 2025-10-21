@@ -47,7 +47,7 @@ export interface DateLocationLock {
 
 export interface Settings {
   _id?: string
-  tentPrice: number // Reverted to single tentPrice field to match existing code
+  tentPrice: number
   addOnPrices: {
     charcoal: number
     firewood: number
@@ -62,7 +62,23 @@ export interface Settings {
   }>
   wadiSurcharge: number
   vatRate: number
-  maxTentsPerDay: number // Added maxTentsPerDay field
+  maxTentsPerDay: number
+  specialPricing: Array<{
+    id: string
+    name: string
+    startDate: string
+    endDate: string
+    priceMultiplier: number
+    isActive: boolean
+  }>
+  locations: Array<{
+    id: string
+    name: string
+    weekdayPrice: number
+    weekendPrice: number
+    surcharge: number
+    isActive: boolean
+  }>
   discounts: {
     code: string
     percentage: number
@@ -74,23 +90,6 @@ export interface Settings {
     wadiMinTents: number
     portableToiletFreeWithChildren: boolean
   }
-  specialDatePricing?: Array<{
-    id: string
-    name: string
-    startDate: string
-    endDate: string
-    priceMultiplier: number
-    description?: string
-    isActive: boolean
-  }>
-  locations?: Array<{
-    id: string
-    name: string
-    weekdayPrice: number
-    weekendPrice: number
-    surcharge: number
-    isActive: boolean
-  }>
   updatedAt: Date
 }
 

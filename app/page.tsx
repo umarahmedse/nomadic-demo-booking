@@ -20,6 +20,7 @@ import { calculateBookingPrice, fetchPricingSettings } from "@/lib/pricing"
 import type { BookingFormData, Settings } from "@/lib/types"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import Stepper from "@/components/ui/stepper"
+import WadiSingleTentModal from "@/components/wadi-single-tent-modal"
 
 const DEFAULT_SETTINGS = {
   tentPrice: 1297, // Base price for weekdays and multiple tents
@@ -99,6 +100,11 @@ export default function BookingPage() {
 
   const [locationMessage, setLocationMessage] = useState("")
   const stepperSectionRef = useRef<HTMLDivElement>(null)
+
+  // Add modal state and handlers
+  const [showWadiModal, setShowWadiModal] = useState(false)
+  const [wadiModalConfirmed, setWadiModalConfirmed] = useState(false)
+  const [pendingSubmit, setPendingSubmit] = useState(false)
 
   const scrollToStepperTop = () => {
     stepperSectionRef.current?.scrollIntoView({
@@ -442,7 +448,6 @@ export default function BookingPage() {
         const newErrors = { ...errors }
         if (newCount < 2) {
           newErrors.numberOfTents = "Wadi location requires at least 2 tents"
-          toast.info("Wadi location with 1 tent: +500 AED surcharge applied + weekend rate charged even on weekdays")
         } else {
           delete newErrors.numberOfTents
         }
@@ -731,6 +736,12 @@ export default function BookingPage() {
       return
     }
 
+    if (formData.location === "Wadi" && formData.numberOfTents === 1 && !wadiModalConfirmed) {
+      setPendingSubmit(true)
+      setShowWadiModal(true)
+      return
+    }
+
     setIsLoading(true)
 
     // Show loading toast
@@ -787,6 +798,8 @@ export default function BookingPage() {
       toast.error(errorMessage)
     } finally {
       setIsLoading(false)
+      setPendingSubmit(false) // Reset pending submit state
+      setWadiModalConfirmed(false) // Reset modal confirmation state
     }
   }
 
@@ -846,6 +859,23 @@ export default function BookingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FBF9D9] via-[#E6CFA9] to-[#D3B88C]">
+      <WadiSingleTentModal
+        isOpen={showWadiModal}
+        onConfirm={() => {
+          setWadiModalConfirmed(true)
+          setShowWadiModal(false)
+          // Manually trigger handleSubmit again after confirmation
+          if (pendingSubmit) {
+            handleSubmit(new Event("submit") as any)
+          }
+        }}
+        onCancel={() => {
+          setShowWadiModal(false)
+          setPendingSubmit(false)
+        }}
+        // This is a placeholder value; you might want to fetch this dynamically or define it elsewhere.
+        extraCharge={500}
+      />
       <nav className="bg-[#3C2317]/90 backdrop-blur-md border-b border-[#3C2317]/50 shadow-lg sticky top-0 z-50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 lg:px-6 py-3">
           <div className="flex items-center justify-between">
@@ -1521,6 +1551,7 @@ export default function BookingPage() {
                     </div>
                   </CardContent>
                 </Card>
+
                 <Card
                   className="border-[#D3B88C]/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-[#FBF9D9]/80 backdrop-blur-sm !pt-0"
                   id="tour2-step3"
@@ -1734,7 +1765,7 @@ export default function BookingPage() {
 
                   <Button
                     type="button"
-                    onClick={() => handleStepChange(3)}
+                    onClick={() => handleStepChange(2)}
                     className="bg-[#3C2317] text-[#FBF9D9] hover:bg-[#5D4037] cursor-pointer"
                   >
                     Next

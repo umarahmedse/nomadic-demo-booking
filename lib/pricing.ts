@@ -1,5 +1,5 @@
 export const DEFAULT_SETTINGS = {
-  tentPrice: 1297, // Reverted to single tentPrice field
+  tentPrice: 1297,
   addOnPrices: {
     charcoal: 60,
     firewood: 75,
@@ -7,20 +7,12 @@ export const DEFAULT_SETTINGS = {
   },
   wadiSurcharge: 250,
   vatRate: 0.05,
-  maxTentsPerDay: 15, // Added default tent capacity
-  specialDatePricing: [],
+  maxTentsPerDay: 15,
+  specialPricing: [],
   locations: [
     {
       id: "desert",
       name: "Desert",
-      weekdayPrice: 1297,
-      weekendPrice: 1497,
-      surcharge: 0,
-      isActive: true,
-    },
-    {
-      id: "mountain",
-      name: "Mountain",
       weekdayPrice: 1297,
       weekendPrice: 1497,
       surcharge: 0,
@@ -35,48 +27,6 @@ export const DEFAULT_SETTINGS = {
       isActive: true,
     },
   ],
-}
-
-function getSpecialDatePricing(
-  bookingDate: string,
-  specialDatePricing: Array<{
-    id: string
-    name: string
-    startDate: string
-    endDate: string
-    priceMultiplier: number
-    description?: string
-    isActive: boolean
-  }> = [],
-) {
-  if (!bookingDate || !specialDatePricing.length) return null
-
-  const date = new Date(bookingDate)
-  const dateString = date.toISOString().split("T")[0]
-
-  for (const pricing of specialDatePricing) {
-    if (!pricing.isActive) continue
-    if (dateString >= pricing.startDate && dateString <= pricing.endDate) {
-      return pricing
-    }
-  }
-
-  return null
-}
-
-function getLocationPricing(
-  location: string,
-  locations: Array<{
-    id: string
-    name: string
-    weekdayPrice: number
-    weekendPrice: number
-    surcharge: number
-    isActive: boolean
-  }> = [],
-) {
-  const locationData = locations.find((loc) => loc.name === location || loc.id === location)
-  return locationData || locations[0] // Default to first location if not found
 }
 
 export function calculateBookingPrice(
@@ -98,48 +48,58 @@ export function calculateBookingPrice(
     wadiSurcharge: settings?.wadiSurcharge ?? DEFAULT_SETTINGS.wadiSurcharge,
     vatRate: settings?.vatRate ?? DEFAULT_SETTINGS.vatRate,
     maxTentsPerDay: settings?.maxTentsPerDay ?? DEFAULT_SETTINGS.maxTentsPerDay,
-    specialDatePricing: settings?.specialDatePricing ?? DEFAULT_SETTINGS.specialDatePricing,
+    specialPricing: settings?.specialPricing ?? DEFAULT_SETTINGS.specialPricing,
     locations: settings?.locations ?? DEFAULT_SETTINGS.locations,
   }
 
   let tentPrice = 0
-  let locationSurcharge = 0
-  let wadiSingleTentSurcharge = 0
-
-  const specialPricing = getSpecialDatePricing(bookingDate, safeSettings.specialDatePricing)
 
   if (bookingDate) {
     const date = new Date(bookingDate)
     const dayOfWeek = date.getDay()
     const isWeekend = dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0
 
-    const locationPricing = getLocationPricing(location, safeSettings.locations)
+    // Check for special pricing (holidays/events)
+    const specialPrice = safeSettings.specialPricing.find((sp) => {
+      if (!sp.isActive) return false
+      const startDate = new Date(sp.startDate)
+      const endDate = new Date(sp.endDate)
+      return date >= startDate && date <= endDate
+    })
+
+    // Get location-specific pricing
+    const locationConfig = safeSettings.locations.find(
+      (loc) => loc.name.toLowerCase() === location.toLowerCase() && loc.isActive,
+    )
+
+    let basePrice = locationConfig
+      ? isWeekend
+        ? locationConfig.weekendPrice
+        : locationConfig.weekdayPrice
+      : safeSettings.tentPrice
+
+    // Apply special pricing multiplier if applicable
+    if (specialPrice) {
+      basePrice = basePrice * specialPrice.priceMultiplier
+    }
 
     if (numberOfTents >= 2) {
-      tentPrice = (isWeekend ? locationPricing.weekendPrice : locationPricing.weekdayPrice) * numberOfTents
+      tentPrice = basePrice * numberOfTents
     } else {
-      if (location === "Wadi") {
-        tentPrice = locationPricing.weekendPrice
-        wadiSingleTentSurcharge = 500
-      } else if (isWeekend) {
-        tentPrice = locationPricing.weekendPrice
-      } else {
-        tentPrice = locationPricing.weekdayPrice
-      }
+      tentPrice = basePrice
     }
-
-    if (specialPricing) {
-      tentPrice = tentPrice * specialPricing.priceMultiplier
-    }
-
-    locationSurcharge = locationPricing.surcharge
   } else {
-    const locationPricing = getLocationPricing(location, safeSettings.locations)
-    tentPrice = numberOfTents === 1 ? locationPricing.weekendPrice : locationPricing.weekdayPrice * numberOfTents
-    locationSurcharge = locationPricing.surcharge
+    tentPrice = numberOfTents === 1 ? safeSettings.tentPrice + 200 : safeSettings.tentPrice * numberOfTents
   }
 
-  // Calculate standard add-ons
+  let locationSurcharge = 0
+  const locationConfig = safeSettings.locations.find(
+    (loc) => loc.name.toLowerCase() === location.toLowerCase() && loc.isActive,
+  )
+  if (locationConfig) {
+    locationSurcharge = locationConfig.surcharge
+  }
+
   let addOnsCost = 0
   if (addOns.charcoal) addOnsCost += safeSettings.addOnPrices.charcoal
   if (addOns.firewood) addOnsCost += safeSettings.addOnPrices.firewood
@@ -147,10 +107,9 @@ export function calculateBookingPrice(
     addOnsCost += safeSettings.addOnPrices.portableToilet
   }
 
-  // Calculate custom add-ons
   const customAddOnsCost = customAddOns.filter((addon) => addon.selected).reduce((sum, addon) => sum + addon.price, 0)
 
-  const subtotal = tentPrice + locationSurcharge + addOnsCost + customAddOnsCost + wadiSingleTentSurcharge
+  const subtotal = tentPrice + locationSurcharge + addOnsCost + customAddOnsCost
   const vat = subtotal * safeSettings.vatRate
   const total = subtotal + vat
 
@@ -159,11 +118,9 @@ export function calculateBookingPrice(
     locationSurcharge,
     addOnsCost,
     customAddOnsCost,
-    wadiSingleTentSurcharge,
     subtotal,
     vat,
     total,
-    specialDatePricing: specialPricing,
   }
 }
 
@@ -179,9 +136,14 @@ export async function fetchPricingSettings(bustCache = false) {
 
     if (response.ok) {
       const settings = await response.json()
-      // Ensure customAddOns array exists
       if (!settings.customAddOns) {
         settings.customAddOns = []
+      }
+      if (!settings.specialPricing) {
+        settings.specialPricing = []
+      }
+      if (!settings.locations) {
+        settings.locations = DEFAULT_SETTINGS.locations
       }
       return settings
     }
@@ -195,7 +157,6 @@ export async function fetchPricingSettings(bustCache = false) {
 }
 
 export function invalidateSettingsCache() {
-  // This can be used to trigger a refresh of settings
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("settingsUpdated"))
   }

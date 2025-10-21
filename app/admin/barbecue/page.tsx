@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { Calendar, DollarSign, Eye, AlertCircle, Trash2, Users, TrendingUp } from "lucide-react"
-import QuickInvoiceDownload from "@/components/invoice/quick-invoice-download"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -253,7 +252,6 @@ export default function BarbecueOrdersPage() {
                           <TableCell className="py-4 px-6">{getStatusBadge(b.isPaid)}</TableCell>
                           <TableCell className="py-4 px-6">
                             <div className="flex items-center gap-2">
-                              <QuickInvoiceDownload booking={b} bookingType="barbecue" />
                               <Dialog>
                                 <DialogTrigger asChild>
                                   <Button
