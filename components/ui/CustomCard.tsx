@@ -3,7 +3,7 @@ import Image from "next/image"
 import type { CardComponentProps } from "nextstepjs"
 
 // full-body avatar
-import avatar from "@/public/placeholder-user.jpg"
+import avatar from "@/public/avatar.png"
 
 export const CustomCard = ({
   step,

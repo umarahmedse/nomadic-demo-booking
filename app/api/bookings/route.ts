@@ -29,9 +29,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Number of tents must be between 1 and 5 per booking" }, { status: 400 })
     }
 
-    if (data.location === "Wadi" && data.numberOfTents < 2) {
-      return NextResponse.json({ error: "Wadi location requires at least 2 tents" }, { status: 400 })
-    }
+    // No validation needed for Wadi single tent - surcharge is applied in pricing
 
     // Validate phone number (+971)
     if (!data.customerPhone.startsWith("+971")) {

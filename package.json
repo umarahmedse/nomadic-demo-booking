@@ -52,6 +52,7 @@
     "embla-carousel-react": "latest",
     "gcp-metadata": "latest",
     "input-otp": "latest",
+    "jspdf": "latest",
     "kerberos": "latest",
     "lucide-react": "^0.454.0",
     "mongodb": "latest",

@@ -32,6 +32,11 @@ const DEFAULT_SETTINGS = {
     portableToilet: 200,
   },
   customAddOns: [],
+  locations: [
+    { id: "desert-1", name: "Desert", weekdayPrice: 1297, weekendPrice: 1497 },
+    { id: "wadi-1", name: "Wadi", weekdayPrice: 1297, weekendPrice: 1497 },
+    { id: "mountain-1", name: "Mountain", weekdayPrice: 1297, weekendPrice: 1497 },
+  ],
 }
 
 export default function BookingPage() {
@@ -423,7 +428,7 @@ export default function BookingPage() {
     const newCount = increment ? formData.numberOfTents + 1 : formData.numberOfTents - 1
 
     const maxTentsPerBooking = 5
-    const maxAllowed = Math.min(maxTentsPerBooking, dateConstraints.remainingCapacity || 15) // Updated from 10 to 15
+    const maxAllowed = Math.min(maxTentsPerBooking, dateConstraints.remainingCapacity || 15)
 
     if (increment && newCount > maxAllowed) {
       if (dateConstraints.remainingCapacity && dateConstraints.remainingCapacity < maxTentsPerBooking) {
@@ -451,7 +456,6 @@ export default function BookingPage() {
           sleepingArrangements: newArrangements,
         }
       })
-      setTouched((prev) => ({ ...prev, numberOfTents: true }))
 
       if (formData.location === "Wadi" && newCount === 1) {
         setShowWadiModal(true)
@@ -639,12 +643,8 @@ export default function BookingPage() {
         }
         break
       case "numberOfTents":
-        // Only validate for Wadi if current location is Wadi
-        if (formData.location === "Wadi" && formData.numberOfTents < 2) {
-          newErrors.numberOfTents = "Wadi location requires at least 2 tents"
-        } else {
-          delete newErrors.numberOfTents
-        }
+        // No validation needed for numberOfTents
+        delete newErrors.numberOfTents
         break
       case "arrivalTime":
         if (!value) {
@@ -848,18 +848,7 @@ export default function BookingPage() {
       return newErrors
     })
 
-    // Only validate for Wadi if Wadi is selected
-    if (location === "Wadi") {
-      if (formData.numberOfTents < 2 && dateConstraints.remainingCapacity >= 2) {
-        setErrors((prev) => ({
-          ...prev,
-          numberOfTents: "Wadi location requires at least 2 tents",
-        }))
-        setTouched((prev) => ({ ...prev, numberOfTents: true }))
-        toast.error("Wadi location requires minimum 2 tents")
-      }
-    }
-    // No else clause needed - errors are already cleared above
+    // No validation needed - users can now book 1 tent at Wadi with surcharge
   }
 
   return (
@@ -919,6 +908,7 @@ export default function BookingPage() {
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
+                    "/placeholder.svg" ||
                     "/placeholder.svg"
                   }
                   alt={campingImages[currentImageIndex].alt}
@@ -940,6 +930,7 @@ export default function BookingPage() {
                     src={
                       image.src ||
                       "/placeholder.svg?height=130&width=200&query=camping scene" ||
+                      "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
@@ -1440,63 +1431,41 @@ export default function BookingPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem
-                            value="Desert"
-                            disabled={dateConstraints.lockedLocation && dateConstraints.lockedLocation !== "Desert"}
-                          >
-                            🏜️ Desert
-                            {dateConstraints.lockedLocation && dateConstraints.lockedLocation !== "Desert" && (
-                              <span className="text-xs text-gray-500 ml-2">(Not available for this date)</span>
-                            )}
-                          </SelectItem>
-                          <SelectItem value="Mountain" disabled>
-                            ⛰️ Mountain (Coming Soon)
-                          </SelectItem>
-                          <SelectItem
-                            value="Wadi"
-                            disabled={dateConstraints.lockedLocation && dateConstraints.lockedLocation !== "Wadi"}
-                          >
-                            🌊 Wadi
-                            <span className="text-xs text-amber-600 ml-2">(min. 2 tents required)</span>
-                            {dateConstraints.lockedLocation && dateConstraints.lockedLocation !== "Wadi" && (
-                              <span className="text-xs text-gray-500 ml-2">(Not available for this date)</span>
-                            )}
-                          </SelectItem>
+                          {settings?.locations?.map((location: any) => (
+                            <SelectItem
+                              key={location.id}
+                              value={location.name}
+                              disabled={
+                                dateConstraints.lockedLocation && dateConstraints.lockedLocation !== location.name
+                              }
+                            >
+                              {location.name}
+                              {location.name === "Wadi" && (
+                                <span className="text-xs text-amber-600 ml-2">
+                                  (AED {location.weekdayPrice} - {location.weekendPrice})
+                                </span>
+                              )}
+                              {location.name === "Desert" && (
+                                <span className="text-xs text-gray-600 ml-2">
+                                  (AED {location.weekdayPrice} - {location.weekendPrice})
+                                </span>
+                              )}
+                              {dateConstraints.lockedLocation && dateConstraints.lockedLocation !== location.name && (
+                                <span className="text-xs text-gray-500 ml-2">(Not available for this date)</span>
+                              )}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
 
                       {formData.location === "Wadi" && (
                         <div className="space-y-2">
-                          {/* <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
-                            <div className="flex items-center space-x-2">
-                              <div className="text-xs sm:text-sm">
-                                
-                                <p className="text-blue-700 mt-1 leading-relaxed">
-                                  Requires minimum 2 tents. Additional 250 AED surcharge per extra tent.
-                                </p>
-                              </div>
-                            </div>
-                          </div> */}
-
-                          {dateConstraints.remainingCapacity < 2 && (
+                          {dateConstraints.remainingCapacity < 1 && (
                             <div className="p-2 sm:p-3 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-lg">
                               <div className="flex items-center space-x-2">
                                 <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
                                 <span className="text-xs sm:text-sm font-medium text-red-800">
-                                  Wadi requires 2 tents and on this date max {dateConstraints.remainingCapacity} tent
-                                  {dateConstraints.remainingCapacity === 1 ? "" : "s"} you can book, so choose another
-                                  date for this place
-                                </span>
-                              </div>
-                            </div>
-                          )}
-
-                          {formData.numberOfTents < 2 && dateConstraints.remainingCapacity >= 2 && (
-                            <div className="p-2 sm:p-3 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-lg">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></div>
-                                <span className="text-xs sm:text-sm font-medium text-red-800">
-                                  Please select at least 2 tents for Wadi location
+                                  No tents available for Wadi on this date. Please choose another date.
                                 </span>
                               </div>
                             </div>
@@ -2131,7 +2100,7 @@ export default function BookingPage() {
                           <span className="text-blue-800 font-medium text-xs sm:text-sm">Wadi Location</span>
                         </div>
                         <span className="text-blue-900 font-semibold text-xs sm:text-sm">
-                          +AED {settings?.wadiSurcharge || 250}
+                          +AED {settings?.wadiSurcharge || DEFAULT_SETTINGS.wadiSurcharge}
                         </span>
                       </div>
                       {/* <p className="text-blue-700 text-xs mt-1">
@@ -2167,7 +2136,9 @@ export default function BookingPage() {
                       </span>
                     </div>
                     <div className="flex justify-between text-xs">
-                      <span className="text-[#3C2317]/80">VAT ({((settings?.vatRate || 0.05) * 100).toFixed(0)}%)</span>
+                      <span className="text-[#3C2317]/80">
+                        VAT ({((settings?.vatRate || DEFAULT_SETTINGS.vatRate) * 100).toFixed(0)}%)
+                      </span>
                       <span className="text-[#3C2317] font-medium">AED {pricing.vat.toFixed(2)}</span>
                     </div>
                   </div>
