@@ -115,9 +115,10 @@ export function calculateBookingPrice(
 
     const locationPricing = getLocationPricing(location, safeSettings.locations)
 
-    if (numberOfTents === 1) {
+    if (numberOfTents >= 2) {
+      tentPrice = (isWeekend ? locationPricing.weekendPrice : locationPricing.weekdayPrice) * numberOfTents
+    } else {
       if (location === "Wadi") {
-        // For Wadi with 1 tent: always charge weekend rate + add 500 AED surcharge
         tentPrice = locationPricing.weekendPrice
         wadiSingleTentSurcharge = 500
       } else if (isWeekend) {
@@ -125,9 +126,6 @@ export function calculateBookingPrice(
       } else {
         tentPrice = locationPricing.weekdayPrice
       }
-    } else {
-      // For 2+ tents: charge based on weekend/weekday
-      tentPrice = (isWeekend ? locationPricing.weekendPrice : locationPricing.weekdayPrice) * numberOfTents
     }
 
     if (specialPricing) {
