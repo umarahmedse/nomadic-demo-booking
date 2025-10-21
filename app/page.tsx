@@ -127,7 +127,7 @@ export default function BookingPage() {
         const step1Errors = []
         if (!formData.bookingDate) step1Errors.push("bookingDate")
         if (!formData.location) step1Errors.push("location")
-        if (formData.location === "Wadi" && formData.numberOfTents < 2) step1Errors.push("numberOfTents")
+        if (formData.location === "Wadi" && formData.numberOfTents < 2) showWadiModal(true)
 
         // Add proper date validation for step 1
         if (formData.bookingDate) {
