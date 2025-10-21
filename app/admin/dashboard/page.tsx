@@ -27,6 +27,7 @@ import type { Booking } from "@/lib/types"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import QuickInvoiceDownload from "@/components/invoice/quick-invoice-download"
 
 function formatDate(date: string | Date) {
   try {
@@ -544,6 +545,7 @@ export default function AdminDashboard() {
                         <TableCell className="py-4 px-6">{getStatusBadge(booking)}</TableCell>
                         <TableCell className="py-4 px-6">
                           <div className="flex items-center gap-2">
+                            <QuickInvoiceDownload booking={booking} bookingType="camping" />
                             <Dialog>
                               <DialogTrigger asChild>
                                 <Button
