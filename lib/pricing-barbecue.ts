@@ -1,11 +1,4 @@
-export type BarbecueGroupSize = 10 | 15 | 20
-
-const VAT_RATE = 0.05
-const ADDON_PRICES = {
-  charcoal: 60,
-  firewood: 75,
-  portableToilet: 200,
-}
+import { type BarbecueGroupSize, VAT_RATE, ADDON_PRICES } from "./constants"
 
 export function calculateBarbecuePrice(
   groupSize: BarbecueGroupSize,

@@ -41,6 +41,8 @@ export default function BookingPage() {
   const [settings, setSettings] = useState<Settings | null>(null)
   const [loadingSettings, setLoadingSettings] = useState(true)
 
+  const [wadiSingleTentSurcharge, setWadiSingleTentSurcharge] = useState(0)
+
   interface DateConstraints {
     hasBookings: boolean
     lockedLocation: "Desert" | "Mountain" | "Wadi" | null
@@ -284,6 +286,12 @@ export default function BookingPage() {
       selected: selectedCustomAddOns.includes(addon.id),
     }))
 
+    let wadiSurcharge = 0
+    if (formData.location === "Wadi" && formData.numberOfTents === 1) {
+      wadiSurcharge = 500 // 500 AED surcharge for single tent at Wadi
+    }
+    setWadiSingleTentSurcharge(wadiSurcharge)
+
     const newPricing = calculateBookingPrice(
       formData.numberOfTents,
       formData.location,
@@ -292,6 +300,7 @@ export default function BookingPage() {
       customAddOnsWithSelection,
       settings,
       formData.bookingDate,
+      wadiSurcharge,
     )
     setPricing(newPricing)
   }, [
@@ -299,9 +308,9 @@ export default function BookingPage() {
     formData.location,
     formData.addOns,
     formData.hasChildren,
+    formData.bookingDate,
     selectedCustomAddOns,
     settings,
-    formData.bookingDate,
   ])
 
   const setUserInteracting = useCallback((interacting: boolean, duration = 5000) => {
@@ -695,10 +704,6 @@ export default function BookingPage() {
       }
     }
 
-    if (formData.location === "Wadi" && formData.numberOfTents < 2) {
-      newErrors.numberOfTents = "Wadi location requires at least 2 tents"
-    }
-
     if (formData.numberOfTents > 5) {
       newErrors.numberOfTents = "For larger bookings or special requests, please enquire directly with our team."
     }
@@ -756,7 +761,7 @@ export default function BookingPage() {
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData), // ✅ Correct
+        body: JSON.JSON.stringify(bookingData),
       })
 
       if (!response.ok) {
@@ -798,7 +803,7 @@ export default function BookingPage() {
       toast.error(errorMessage)
     } finally {
       setIsLoading(false)
-      setPendingSubmit(false) // Reset pending submit state
+      setPendingSubmit(false)
       setWadiModalConfirmed(false) // Reset modal confirmation state
     }
   }
@@ -912,6 +917,7 @@ export default function BookingPage() {
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
+                    "/placeholder.svg" ||
                     "/placeholder.svg"
                   }
                   alt={campingImages[currentImageIndex].alt}
@@ -933,6 +939,7 @@ export default function BookingPage() {
                     src={
                       image.src ||
                       "/placeholder.svg?height=130&width=200&query=camping scene" ||
+                      "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||

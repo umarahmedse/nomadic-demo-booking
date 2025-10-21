@@ -37,6 +37,7 @@ export function calculateBookingPrice(
   customAddOns: Array<{ id: string; name: string; price: number; selected?: boolean }> = [],
   settings = DEFAULT_SETTINGS,
   bookingDate?: string,
+  wadiSingleTentSurcharge = 0,
 ) {
   const safeSettings = {
     tentPrice: settings?.tentPrice ?? DEFAULT_SETTINGS.tentPrice,
@@ -86,7 +87,7 @@ export function calculateBookingPrice(
     if (numberOfTents >= 2) {
       tentPrice = basePrice * numberOfTents
     } else {
-      tentPrice = basePrice
+      tentPrice = basePrice + wadiSingleTentSurcharge
     }
   } else {
     tentPrice = numberOfTents === 1 ? safeSettings.tentPrice + 200 : safeSettings.tentPrice * numberOfTents

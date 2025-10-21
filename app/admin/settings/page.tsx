@@ -8,7 +8,18 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Save, ArrowLeft, SettingsIcon, DollarSign, Tent, Plus, Trash2, AlertCircle } from "lucide-react"
+import {
+  MapPin,
+  Save,
+  ArrowLeft,
+  SettingsIcon,
+  DollarSign,
+  Tent,
+  Plus,
+  Trash2,
+  AlertCircle,
+  CheckIcon as Checkbox,
+} from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { toast } from "sonner"
@@ -19,6 +30,12 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [newAddOn, setNewAddOn] = useState({ name: "", price: 0, description: "" })
+  const [newSpecialPricing, setNewSpecialPricing] = useState({
+    name: "",
+    startDate: "",
+    endDate: "",
+    priceMultiplier: 1,
+  })
 
   useEffect(() => {
     fetchSettings()
@@ -119,6 +136,56 @@ export default function AdminSettingsPage() {
     } catch (error) {
       console.error("Error deleting custom add-on:", error)
       toast.error("Failed to delete custom add-on")
+    }
+  }
+
+  const addSpecialPricing = () => {
+    if (
+      !newSpecialPricing.name ||
+      !newSpecialPricing.startDate ||
+      !newSpecialPricing.endDate ||
+      newSpecialPricing.priceMultiplier <= 0
+    ) {
+      toast.error("Please provide valid event name, dates, and multiplier")
+      return
+    }
+
+    const specialPricing = settings?.specialPricing || []
+    const updatedPricing = [
+      ...specialPricing,
+      {
+        ...newSpecialPricing,
+        id: Date.now().toString(),
+        isActive: true,
+      },
+    ]
+
+    updateSettings("specialPricing", updatedPricing)
+    setNewSpecialPricing({ name: "", startDate: "", endDate: "", priceMultiplier: 1 })
+    toast.success("Special pricing added successfully")
+  }
+
+  const removeSpecialPricing = async (id: string) => {
+    try {
+      const specialPricing = settings?.specialPricing || []
+      const updatedPricing = specialPricing.filter((pricing: any) => pricing.id !== id)
+
+      const response = await fetch("/api/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ specialPricing: updatedPricing }),
+      })
+
+      if (response.ok) {
+        updateSettings("specialPricing", updatedPricing)
+        toast.success("Special pricing deleted successfully")
+        await fetchSettings()
+      } else {
+        toast.error("Failed to delete special pricing")
+      }
+    } catch (error) {
+      console.error("Error deleting special pricing:", error)
+      toast.error("Failed to delete special pricing")
     }
   }
 
@@ -401,6 +468,231 @@ export default function AdminSettingsPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Special Pricing for Holidays/Events */}
+          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl">
+            <CardHeader className="border-b border-[#D3B88C]/50">
+              <CardTitle className="text-[#3C2317] text-lg font-semibold flex items-center">
+                <DollarSign className="w-5 h-5 mr-2 text-[#D3B88C]" />
+                Special Pricing (Holidays & Events)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="bg-[#E6CFA9]/30 p-4 rounded-lg mb-4">
+                <p className="text-sm text-[#3C2317]/70">
+                  Set custom pricing multipliers for specific dates or date ranges (e.g., holidays, special events).
+                  Prices will be multiplied by the factor you set.
+                </p>
+              </div>
+
+              {/* Add New Special Pricing */}
+              <div className="border border-[#D3B88C]/50 rounded-lg p-4 bg-[#E6CFA9]/20">
+                <h4 className="font-medium text-[#3C2317] mb-4">Add New Special Pricing Period</h4>
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="specialPricingName" className="text-[#3C2317]">
+                      Event Name
+                    </Label>
+                    <Input
+                      id="specialPricingName"
+                      placeholder="e.g., New Year"
+                      value={newSpecialPricing?.name || ""}
+                      onChange={(e) => setNewSpecialPricing({ ...newSpecialPricing, name: e.target.value })}
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="specialPricingStart" className="text-[#3C2317]">
+                      Start Date
+                    </Label>
+                    <Input
+                      id="specialPricingStart"
+                      type="date"
+                      value={newSpecialPricing?.startDate || ""}
+                      onChange={(e) => setNewSpecialPricing({ ...newSpecialPricing, startDate: e.target.value })}
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="specialPricingEnd" className="text-[#3C2317]">
+                      End Date
+                    </Label>
+                    <Input
+                      id="specialPricingEnd"
+                      type="date"
+                      value={newSpecialPricing?.endDate || ""}
+                      onChange={(e) => setNewSpecialPricing({ ...newSpecialPricing, endDate: e.target.value })}
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="specialPricingMultiplier" className="text-[#3C2317]">
+                      Price Multiplier
+                    </Label>
+                    <Input
+                      id="specialPricingMultiplier"
+                      type="number"
+                      step="0.1"
+                      placeholder="1.5"
+                      value={newSpecialPricing?.priceMultiplier || ""}
+                      onChange={(e) =>
+                        setNewSpecialPricing({ ...newSpecialPricing, priceMultiplier: Number(e.target.value) })
+                      }
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                </div>
+                <Button
+                  onClick={addSpecialPricing}
+                  className="mt-4 bg-gradient-to-r from-[#84cc16] to-[#65a30d] hover:from-[#84cc16]/90 hover:to-[#65a30d]/90 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Special Pricing
+                </Button>
+              </div>
+
+              {/* Existing Special Pricing */}
+              {settings?.specialPricing && settings.specialPricing.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-[#3C2317] text-sm">Active Special Pricing Periods</h4>
+                  <div className="grid gap-3">
+                    {settings.specialPricing.map((pricing: any, index: number) => (
+                      <div
+                        key={pricing.id}
+                        className={`flex items-center justify-between p-4 border border-[#D3B88C]/50 rounded-lg transition-colors hover:bg-[#E6CFA9]/20 ${
+                          index % 2 === 0 ? "bg-white/30" : "bg-[#FBF9D9]/30"
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3">
+                            <h5 className="font-medium text-[#3C2317]">{pricing.name}</h5>
+                            <Badge variant="outline" className="border-[#D3B88C] text-[#3C2317] text-xs">
+                              {pricing.priceMultiplier}x
+                            </Badge>
+                            {!pricing.isActive && (
+                              <Badge variant="outline" className="border-red-200 text-red-600 text-xs">
+                                Inactive
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-[#3C2317]/60 mt-1">
+                            {new Date(pricing.startDate).toLocaleDateString()} -{" "}
+                            {new Date(pricing.endDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            checked={pricing.isActive}
+                            onCheckedChange={(checked) => {
+                              const updated = settings.specialPricing.map((p: any) =>
+                                p.id === pricing.id ? { ...p, isActive: checked } : p,
+                              )
+                              updateSettings("specialPricing", updated)
+                            }}
+                            className="border-[#D3B88C]"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeSpecialPricing(pricing.id)}
+                            className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 cursor-pointer transition-all duration-200 h-8 px-2"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Multi-Location Management */}
+          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl">
+            <CardHeader className="border-b border-[#D3B88C]/50">
+              <CardTitle className="text-[#3C2317] text-lg font-semibold flex items-center">
+                <MapPin className="w-5 h-5 mr-2 text-[#D3B88C]" />
+                Location Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="bg-[#E6CFA9]/30 p-4 rounded-lg mb-4">
+                <p className="text-sm text-[#3C2317]/70">
+                  Manage different camping locations with their own weekday and weekend pricing.
+                </p>
+              </div>
+
+              {settings?.locations && settings.locations.length > 0 && (
+                <div className="space-y-4">
+                  {settings.locations.map((location: any, index: number) => (
+                    <div key={location.id} className="border border-[#D3B88C]/50 rounded-lg p-4 bg-white/30">
+                      <div className="flex items-center justify-between mb-4">
+                        <h5 className="font-medium text-[#3C2317]">{location.name}</h5>
+                        <Checkbox
+                          checked={location.isActive}
+                          onCheckedChange={(checked) => {
+                            const updated = settings.locations.map((l: any) =>
+                              l.id === location.id ? { ...l, isActive: checked } : l,
+                            )
+                            updateSettings("locations", updated)
+                          }}
+                          className="border-[#D3B88C]"
+                        />
+                      </div>
+                      <div className="grid md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[#3C2317] text-sm">Weekday Price (AED)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={location.weekdayPrice}
+                            onChange={(e) => {
+                              const updated = settings.locations.map((l: any) =>
+                                l.id === location.id ? { ...l, weekdayPrice: Number(e.target.value) } : l,
+                              )
+                              updateSettings("locations", updated)
+                            }}
+                            className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[#3C2317] text-sm">Weekend Price (AED)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={location.weekendPrice}
+                            onChange={(e) => {
+                              const updated = settings.locations.map((l: any) =>
+                                l.id === location.id ? { ...l, weekendPrice: Number(e.target.value) } : l,
+                              )
+                              updateSettings("locations", updated)
+                            }}
+                            className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[#3C2317] text-sm">Surcharge (AED)</Label>
+                          <Input
+                            type="number"
+                            step="0.1"
+                            value={location.surcharge}
+                            onChange={(e) => {
+                              const updated = settings.locations.map((l: any) =>
+                                l.id === location.id ? { ...l, surcharge: Number(e.target.value) } : l,
+                              )
+                              updateSettings("locations", updated)
+                            }}
+                            className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </CardContent>

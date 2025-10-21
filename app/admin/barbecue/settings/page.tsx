@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Trash2, SettingsIcon, ArrowLeft, DollarSign } from "lucide-react"
+import { Plus, Trash2, SettingsIcon, ArrowLeft, DollarSign, CheckIcon as Checkbox, Badge } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { toast } from "sonner"
@@ -15,6 +15,14 @@ type BBQSettings = {
   vatRate: number
   addOnPrices: { charcoal: number; firewood: number; portableToilet: number }
   customAddOns: Array<{ id: string; name: string; price: number; description?: string }>
+  specialPricing?: Array<{
+    id: string
+    name: string
+    startDate: string
+    endDate: string
+    priceMultiplier: number
+    isActive: boolean
+  }>
 }
 
 const DEFAULTS: BBQSettings = {
@@ -29,6 +37,12 @@ export default function AdminBBQSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [newAddOn, setNewAddOn] = useState({ name: "", price: 0, description: "" })
+  const [newSpecialPricing, setNewSpecialPricing] = useState({
+    name: "",
+    startDate: "",
+    endDate: "",
+    priceMultiplier: 1,
+  })
 
   useEffect(() => {
     fetchSettings()
@@ -86,6 +100,37 @@ export default function AdminBBQSettingsPage() {
       "customAddOns",
       settings.customAddOns.filter((a) => a.id !== id),
     )
+  }
+
+  function addSpecialPricing() {
+    if (
+      !newSpecialPricing.name ||
+      !newSpecialPricing.startDate ||
+      !newSpecialPricing.endDate ||
+      newSpecialPricing.priceMultiplier <= 0
+    ) {
+      return toast.error("Provide valid event name, dates, and multiplier")
+    }
+    const specialPricing = settings?.specialPricing || []
+    update("specialPricing", [
+      ...specialPricing,
+      {
+        ...newSpecialPricing,
+        id: Date.now().toString(),
+        isActive: true,
+      },
+    ])
+    setNewSpecialPricing({ name: "", startDate: "", endDate: "", priceMultiplier: 1 })
+    toast.success("Special pricing added")
+  }
+
+  function removeSpecialPricing(id: string) {
+    const specialPricing = settings?.specialPricing || []
+    update(
+      "specialPricing",
+      specialPricing.filter((p) => p.id !== id),
+    )
+    toast.success("Special pricing removed")
   }
 
   if (loading) {
@@ -147,6 +192,143 @@ export default function AdminBBQSettingsPage() {
                   className="border-[#D3B88C] focus:border-[#3C2317] max-w-xs"
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl">
+            <CardHeader className="border-b border-[#D3B88C]/50">
+              <CardTitle className="text-[#3C2317] text-lg font-semibold flex items-center">
+                <DollarSign className="w-5 h-5 mr-2 text-[#D3B88C]" />
+                Special Pricing (Holidays & Events)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="bg-[#E6CFA9]/30 p-4 rounded-lg mb-4">
+                <p className="text-sm text-[#3C2317]/70">
+                  Set custom pricing multipliers for specific dates or date ranges (e.g., holidays, special events).
+                </p>
+              </div>
+
+              {/* Add New Special Pricing */}
+              <div className="border border-[#D3B88C]/50 rounded-lg p-4 bg-[#E6CFA9]/20">
+                <h4 className="font-medium text-[#3C2317] mb-4">Add New Special Pricing Period</h4>
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bbqSpecialPricingName" className="text-[#3C2317]">
+                      Event Name
+                    </Label>
+                    <Input
+                      id="bbqSpecialPricingName"
+                      placeholder="e.g., New Year"
+                      value={newSpecialPricing?.name || ""}
+                      onChange={(e) => setNewSpecialPricing({ ...newSpecialPricing, name: e.target.value })}
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bbqSpecialPricingStart" className="text-[#3C2317]">
+                      Start Date
+                    </Label>
+                    <Input
+                      id="bbqSpecialPricingStart"
+                      type="date"
+                      value={newSpecialPricing?.startDate || ""}
+                      onChange={(e) => setNewSpecialPricing({ ...newSpecialPricing, startDate: e.target.value })}
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bbqSpecialPricingEnd" className="text-[#3C2317]">
+                      End Date
+                    </Label>
+                    <Input
+                      id="bbqSpecialPricingEnd"
+                      type="date"
+                      value={newSpecialPricing?.endDate || ""}
+                      onChange={(e) => setNewSpecialPricing({ ...newSpecialPricing, endDate: e.target.value })}
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bbqSpecialPricingMultiplier" className="text-[#3C2317]">
+                      Price Multiplier
+                    </Label>
+                    <Input
+                      id="bbqSpecialPricingMultiplier"
+                      type="number"
+                      step="0.1"
+                      placeholder="1.5"
+                      value={newSpecialPricing?.priceMultiplier || ""}
+                      onChange={(e) =>
+                        setNewSpecialPricing({ ...newSpecialPricing, priceMultiplier: Number(e.target.value) })
+                      }
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                </div>
+                <Button
+                  onClick={addSpecialPricing}
+                  className="mt-4 bg-gradient-to-r from-[#84cc16] to-[#65a30d] hover:from-[#84cc16]/90 hover:to-[#65a30d]/90 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Special Pricing
+                </Button>
+              </div>
+
+              {/* Existing Special Pricing */}
+              {settings?.specialPricing && settings.specialPricing.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-[#3C2317] text-sm">Active Special Pricing Periods</h4>
+                  <div className="grid gap-3">
+                    {settings.specialPricing.map((pricing: any, index: number) => (
+                      <div
+                        key={pricing.id}
+                        className={`flex items-center justify-between p-4 border border-[#D3B88C]/50 rounded-lg transition-colors hover:bg-[#E6CFA9]/20 ${
+                          index % 2 === 0 ? "bg-white/30" : "bg-[#FBF9D9]/30"
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3">
+                            <h5 className="font-medium text-[#3C2317]">{pricing.name}</h5>
+                            <Badge variant="outline" className="border-[#D3B88C] text-[#3C2317] text-xs">
+                              {pricing.priceMultiplier}x
+                            </Badge>
+                            {!pricing.isActive && (
+                              <Badge variant="outline" className="border-red-200 text-red-600 text-xs">
+                                Inactive
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-[#3C2317]/60 mt-1">
+                            {new Date(pricing.startDate).toLocaleDateString()} -{" "}
+                            {new Date(pricing.endDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            checked={pricing.isActive}
+                            onCheckedChange={(checked) => {
+                              const updated = settings.specialPricing.map((p: any) =>
+                                p.id === pricing.id ? { ...p, isActive: checked } : p,
+                              )
+                              update("specialPricing", updated)
+                            }}
+                            className="border-[#D3B88C]"
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeSpecialPricing(pricing.id)}
+                            className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 cursor-pointer transition-all duration-200 h-8 px-2"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
