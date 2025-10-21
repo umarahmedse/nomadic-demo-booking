@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { MapPin, Users, Plus, Minus, Check, X, Loader2, Calendar, Shield, Compass, Loader2Icon } from "lucide-react"
+import { MapPin, Check, X, Loader2, Calendar, Shield, Compass, Loader2Icon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import Image from "next/image"
@@ -56,6 +56,8 @@ export default function BookingPage() {
     maxBookingsReached: boolean
     blocked: boolean
     blockedReason: string | null
+    totalTents?: number
+    availableLocations?: string[]
   }
 
   const [dateConstraints, setDateConstraints] = useState<DateConstraints>({
@@ -127,7 +129,6 @@ export default function BookingPage() {
         const step1Errors = []
         if (!formData.bookingDate) step1Errors.push("bookingDate")
         if (!formData.location) step1Errors.push("location")
-        if (formData.location === "Wadi" && formData.numberOfTents < 2) step1Errors.push("numberOfTents")
 
         // Add proper date validation for step 1
         if (formData.bookingDate) {
@@ -761,7 +762,7 @@ export default function BookingPage() {
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.JSON.stringify(bookingData),
+        body: JSON.JSONstringify(bookingData),
       })
 
       if (!response.ok) {
@@ -786,7 +787,7 @@ export default function BookingPage() {
         throw new Error("Failed to create checkout session")
       }
 
-      const { url } = await checkoutResponse.json()
+      const { url } = await checkoutResponse.json() // Corrected to use await
 
       // Dismiss loading toast and show success
       toast.dismiss(loadingToast)
@@ -897,18 +898,6 @@ export default function BookingPage() {
                   src={
                     campingImages[currentImageIndex].src ||
                     "/placeholder.svg?height=420&width=1000&query=luxury desert camping" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
-                    "/placeholder.svg" ||
                     "/placeholder.svg"
                   }
                   alt={campingImages[currentImageIndex].alt}
@@ -930,6 +919,8 @@ export default function BookingPage() {
                     src={
                       image.src ||
                       "/placeholder.svg?height=130&width=200&query=camping scene" ||
+                      "/placeholder.svg" ||
+                      "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
@@ -1263,7 +1254,7 @@ export default function BookingPage() {
                     {/* Heading */}
                     <h3 className="text-[#3C2317] font-bold text-2xl">Got a Question?</h3>
                     <p className="text-[#3C2317]/80 text-sm leading-relaxed max-w-xs mx-auto">
-                      Whether it’s a quick question or a booking request, we’re just a WhatsApp message away.
+                      Whether it's a quick question or a booking request, we're just a WhatsApp message away.
                     </p>
 
                     {/* Single WhatsApp Button */}
@@ -1342,7 +1333,7 @@ export default function BookingPage() {
                         }
                       }}
                       onBlur={(e) => handleBlur("bookingDate", e.target.value)}
-                      min={minDateString} // This should prevent selecting invalid dates
+                      min={minDateString}
                       className={cn(
                         "border-2 border-[#D3B88C] focus:border-[#3C2317] focus:ring-2 focus:ring-[#3C2317]/20 transition-all duration-300 h-9 sm:h-10 lg:h-12 rounded-lg sm:rounded-xl cursor-pointer text-xs sm:text-sm",
                         errors.bookingDate && touched.bookingDate && "border-red-500 focus:border-red-500",
@@ -1364,7 +1355,6 @@ export default function BookingPage() {
                       </p>
                     </div>
 
-                    {/* START CHANGE */}
                     {formData.bookingDate && dateConstraints?.blocked && (
                       <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
                         <p className="text-xs sm:text-sm text-red-700">
@@ -1389,7 +1379,6 @@ export default function BookingPage() {
                           )}
                         </div>
                       )}
-                    {/* END CHANGE */}
                   </CardContent>
                 </Card>
 
@@ -1473,7 +1462,6 @@ export default function BookingPage() {
                         </div>
                       )}
 
-                      {/* Location & Setup info bullets */}
                       <div className="mt-3 p-3 bg-[#E6CFA9]/40 border border-[#D3B88C]/40 rounded-lg">
                         <ul className="list-disc pl-4 text-[#3C2317] text-xs sm:text-sm space-y-1">
                           <li>Desert Setups: 40 minutes from Dubai</li>
@@ -1530,201 +1518,6 @@ export default function BookingPage() {
                   </CardContent>
                 </Card>
 
-                <Card
-                  className="border-[#D3B88C]/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-[#FBF9D9]/80 backdrop-blur-sm !pt-0"
-                  id="tour2-step3"
-                >
-                  <CardHeader className="bg-gradient-to-r from-[#D3B88C]/20 to-[#E6CFA9]/20 border-b border-[#D3B88C]/50 h-10 sm:h-12 py-2 sm:py-3 px-3 sm:px-6">
-                    <CardTitle className="text-[#3C2317] flex items-center space-x-2 text-sm sm:text-base lg:text-lg">
-                      <Users className="w-4 h-4 sm:w-5 sm:h-5 text-[#3C2317]" />
-                      <span>Booking Details</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 !pt-0">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-3">
-                      {/* Number of Tents */}
-                      <div>
-                        <Label className="text-[#3C2317] mb-2 block font-medium text-xs sm:text-sm">
-                          Number of Tents *
-                        </Label>
-                        <div className="flex items-center justify-center space-x-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleTentChange(false)}
-                            disabled={formData.numberOfTents <= 1}
-                            className="border-2 border-[#D3B88C] hover:border-[#3C2317] cursor-pointer hover:bg-[#D3B88C] transition-all duration-300 h-7 w-7 sm:h-8 sm:w-8 rounded-lg p-0"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <div className="text-center min-w-[40px] sm:min-w-[50px]">
-                            <div className="text-base sm:text-lg font-bold text-[#3C2317]">
-                              {formData.numberOfTents}
-                            </div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleTentChange(true)}
-                            disabled={formData.numberOfTents >= 5}
-                            className="border-2 border-[#D3B88C] hover:border-[#3C2317] hover:bg-[#D3B88C] cursor-pointer transition-all duration-300 h-7 w-7 sm:h-8 sm:w-8 rounded-lg p-0"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        {/* Remove the error message display for Wadi minimum tents */}
-                      </div>
-
-                      {/* Adults */}
-                      <div>
-                        <Label className="text-[#3C2317] mb-2 block font-medium text-xs sm:text-sm">Adults *</Label>
-                        <div className="flex items-center justify-center space-x-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleAdultsChange(false)}
-                            disabled={adults <= 1}
-                            className="border-2 border-[#D3B88C] hover:border-[#3C2317] cursor-pointer transition-all duration-300 h-7 w-7 sm:h-8 sm:w-8 rounded-lg hover:bg-[#D3B88C] p-0"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <div className="text-center min-w-[40px] sm:min-w-[50px]">
-                            <div className="text-base sm:text-lg font-bold text-[#3C2317]">{adults}</div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleAdultsChange(true)}
-                            disabled={adults >= 20 || adults + children >= formData.numberOfTents * 4}
-                            className="border-2 border-[#D3B88C] hover:border-[#3C2317] cursor-pointer hover:bg-[#D3B88C] transition-all duration-300 h-7 w-7 sm:h-8 sm:w-8 rounded-lg p-0"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Children */}
-                      <div>
-                        <Label className="text-[#3C2317] mb-2 block font-medium text-xs sm:text-sm">
-                          Children <span className="text-xs text-[#3C2317]/70">(under 12)</span>
-                        </Label>
-                        <div className="flex items-start justify-center space-x-2">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleChildrenChange(false)}
-                            disabled={children <= 0}
-                            className="border-2 border-[#D3B88C] hover:border-[#3C2317] cursor-pointer transition-all duration-300 h-7 w-7 sm:h-8 sm:w-8 rounded-lg hover:bg-[#D3B88C] p-0"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <div className="text-center min-w-[40px] sm:min-w-[50px]">
-                            <div className="text-base sm:text-lg font-bold text-[#3C2317]">{children}</div>
-                          </div>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleChildrenChange(true)}
-                            disabled={children >= 10 || adults + children >= formData.numberOfTents * 4}
-                            className="border-2 border-[#D3B88C] hover:border-[#3C2317] cursor-pointer hover:bg-[#D3B88C] transition-all duration-300 h-7 w-7 sm:h-8 sm:w-8 rounded-lg p-0"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-                        {children > 0 && (
-                          <p className="text-xs text-green-600 mt-1 font-medium text-center">
-                            Free portable toilet included!
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="text-center p-2 rounded-lg">
-                      <p className="text-xs text-[#3C2317]/70">
-                        Each tent accommodates up to 4 guests • Total capacity: {formData.numberOfTents * 4} guests
-                      </p>
-                    </div>
-
-                    {formData.numberOfTents >= 5 && (
-                      <div className="text-center p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                        <p className="text-xs text-amber-800 font-medium">
-                          For larger bookings or special requests, please enquire directly with our team.
-                        </p>
-                      </div>
-                    )}
-
-                    {formData.numberOfTents > 0 && (
-                      <div className="mt-2 sm:mt-3">
-                        <Label className="text-[#3C2317] block font-medium text-xs sm:text-sm mb-1">
-                          Sleeping Arrangements
-                        </Label>
-                        <div className="text-[10px] sm:text-xs text-[#3C2317]/70 mb-2 sm:mb-2 leading-snug">
-                          Configure how guests will sleep in each tent (max 4 guests per tent)
-                        </div>
-
-                        <div className="space-y-2 sm:space-y-3">
-                          {formData.sleepingArrangements.map((arrangement) => (
-                            <div
-                              key={arrangement.tentNumber}
-                              className="bg-[#E6CFA9]/20 rounded-lg p-3 border border-[#D3B88C]/40"
-                            >
-                              {/* Tent Header and Select */}
-                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 mb-1">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[#3C2317] font-semibold text-[11px] sm:text-sm">
-                                    Tent {arrangement.tentNumber}
-                                  </span>
-                                </div>
-
-                                <Select
-                                  value={arrangement.arrangement}
-                                  onValueChange={(
-                                    value: "all-singles" | "two-doubles" | "mix" | "double-bed" | "custom",
-                                  ) => handleSleepingArrangementChange(arrangement.tentNumber, value)}
-                                >
-                                  <SelectTrigger className="w-full sm:w-32 border-0 border-[#D3B88C] focus:border-[#3C2317] h-6 text-xs bg-white/90 rounded-md">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="text-xs">
-                                    <SelectItem value="all-singles">All Single beds</SelectItem>
-                                    <SelectItem value="two-doubles">2 double beds</SelectItem>
-                                    <SelectItem value="mix">1 double + 2 singles</SelectItem>
-                                    <SelectItem value="double-bed">Double bed</SelectItem>
-                                    <SelectItem value="custom">Custom</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-
-                              {/* Custom Input Field */}
-                              {arrangement.arrangement === "custom" && (
-                                <div className="mt-2 pt-2 border-t border-[#D3B88C]/30">
-                                  <Label className="text-[#3C2317] text-xs font-medium mb-1.5 block">
-                                    Custom sleeping arrangement
-                                  </Label>
-                                  <Input
-                                    placeholder="e.g., '1 double + 1 single'"
-                                    value={arrangement.customArrangement || ""}
-                                    onChange={(e) =>
-                                      handleCustomArrangementChange(arrangement.tentNumber, e.target.value)
-                                    }
-                                    className="w-full border border-[#D3B88C] focus:border-[#3C2317] focus:ring-1 focus:ring-[#3C2317]/20 h-9 text-xs px-2 rounded-md bg-white placeholder:text-[#3C2317]/40 transition-all duration-200"
-                                  />
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
                 <div className="flex justify-between sm:justify-between sm:gap-5 pt-2 sm:pt-3">
                   <Button
                     type="button"
@@ -1736,7 +1529,6 @@ export default function BookingPage() {
                   >
                     Back
                   </Button>
-
                   <Button
                     type="button"
                     onClick={() => handleStepChange(2)}
@@ -2054,7 +1846,7 @@ export default function BookingPage() {
                   <CardTitle className="text-base sm:text-lg lg:text-xl font-bold flex items-center space-x-2">
                     <span>Booking Summary</span>
                   </CardTitle>
-                  <p className="text-[#FBF9D9]/90 text-xs sm:text-sm">The UAE’s ultimate camping experience</p>
+                  <p className="text-[#FBF9D9]/90 text-xs sm:text-sm">The UAE's ultimate camping experience</p>
                 </div>
               </CardHeader>
               <CardContent className="p-3 sm:p-4 lg:p-6 space-y-2 sm:space-y-3 lg:space-y-4 !pt-0">
@@ -2103,9 +1895,6 @@ export default function BookingPage() {
                           +AED {settings?.wadiSurcharge || DEFAULT_SETTINGS.wadiSurcharge}
                         </span>
                       </div>
-                      {/* <p className="text-blue-700 text-xs mt-1">
-                        Includes exclusive desert location access and enhanced amenities
-                      </p> */}
                     </div>
                   )}
 
@@ -2242,8 +2031,6 @@ export default function BookingPage() {
           </div>
         </div>
       </div>
-
-      {/* WhatsApp Floating Button */}
       <div className="fixed bottom-4 right-3 z-50">
         <a
           href="https://wa.link/wf9dkt"
