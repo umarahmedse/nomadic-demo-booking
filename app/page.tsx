@@ -1440,7 +1440,7 @@ export default function BookingPage() {
                               }
                             >
                               {location.name}
-                              {location.name === "Wadi" && (
+                              {/* {location.name === "Wadi" && (
                                 <span className="text-xs text-amber-600 ml-2">
                                   (AED {location.weekdayPrice} - {location.weekendPrice})
                                 </span>
@@ -1449,7 +1449,7 @@ export default function BookingPage() {
                                 <span className="text-xs text-gray-600 ml-2">
                                   (AED {location.weekdayPrice} - {location.weekendPrice})
                                 </span>
-                              )}
+                              )} */}
                               {dateConstraints.lockedLocation && dateConstraints.lockedLocation !== location.name && (
                                 <span className="text-xs text-gray-500 ml-2">(Not available for this date)</span>
                               )}
