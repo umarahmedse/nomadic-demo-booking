@@ -36,6 +36,7 @@ export default function AdminSettingsPage() {
     endDate: "",
     priceMultiplier: 1,
   })
+  const [newLocation, setNewLocation] = useState({ name: "", weekdayPrice: 0, weekendPrice: 0 })
 
   useEffect(() => {
     fetchSettings()
@@ -785,6 +786,102 @@ export default function AdminSettingsPage() {
                       <li>• Mountain location available</li>
                     </ul>
                   </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/95 backdrop-blur-sm border-[#D3B88C]/30 shadow-xl mb-8">
+            <CardHeader className="border-b border-[#D3B88C]/20 p-6">
+              <CardTitle className="text-[#3C2317] text-xl font-semibold flex items-center">
+                <MapPin className="w-6 h-6 mr-3 text-[#D3B88C]" />
+                Location Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-8">
+              <div className="space-y-6">
+                {/* Existing Locations */}
+                <div>
+                  <h3 className="font-semibold text-[#3C2317] mb-4">Current Locations</h3>
+                  <div className="space-y-3">
+                    {settings?.locations?.map((location: any, index: number) => (
+                      <div
+                        key={index}
+                        className="bg-[#FBF9D9]/50 p-4 rounded-lg border border-[#D3B88C]/30 flex items-center justify-between"
+                      >
+                        <div className="flex-1">
+                          <div className="font-semibold text-[#3C2317]">{location.name}</div>
+                          <div className="text-sm text-[#3C2317]/70 mt-1">
+                            Weekday: AED {location.weekdayPrice} | Weekend: AED {location.weekendPrice}
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => {
+                            const newLocations = settings.locations.filter((_: any, i: number) => i !== index)
+                            updateSettings("locations", newLocations)
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Add New Location */}
+                <Separator className="bg-[#D3B88C]/30" />
+                <div>
+                  <h3 className="font-semibold text-[#3C2317] mb-4">Add New Location</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <Label className="text-[#3C2317] text-sm">Location Name</Label>
+                      <Input
+                        placeholder="e.g., Mountain Camp"
+                        value={newLocation.name}
+                        onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })}
+                        className="border-[#D3B88C] bg-white mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[#3C2317] text-sm">Weekday Price (AED)</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={newLocation.weekdayPrice}
+                        onChange={(e) => setNewLocation({ ...newLocation, weekdayPrice: Number(e.target.value) })}
+                        className="border-[#D3B88C] bg-white mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[#3C2317] text-sm">Weekend Price (AED)</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={newLocation.weekendPrice}
+                        onChange={(e) => setNewLocation({ ...newLocation, weekendPrice: Number(e.target.value) })}
+                        className="border-[#D3B88C] bg-white mt-1"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      if (!newLocation.name || newLocation.weekdayPrice <= 0 || newLocation.weekendPrice <= 0) {
+                        toast.error("Please fill in all location fields")
+                        return
+                      }
+                      const updatedLocations = [...(settings?.locations || []), newLocation]
+                      updateSettings("locations", updatedLocations)
+                      setNewLocation({ name: "", weekdayPrice: 0, weekendPrice: 0 })
+                      toast.success("Location added")
+                    }}
+                    className="bg-gradient-to-r from-[#0891b2] to-[#0e7490] hover:from-[#0891b2]/90 hover:to-[#0e7490]/90 text-white"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Location
+                  </Button>
                 </div>
               </div>
             </CardContent>

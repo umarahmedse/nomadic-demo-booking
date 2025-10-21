@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import InvoiceDownloadButton from "@/components/invoice-download-button"
 
 type BarbecueBooking = {
   _id: string
@@ -252,6 +253,7 @@ export default function BarbecueOrdersPage() {
                           <TableCell className="py-4 px-6">{getStatusBadge(b.isPaid)}</TableCell>
                           <TableCell className="py-4 px-6">
                             <div className="flex items-center gap-2">
+                              <InvoiceDownloadButton booking={b} bookingType="barbecue" />
                               <Dialog>
                                 <DialogTrigger asChild>
                                   <Button

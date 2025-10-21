@@ -419,7 +419,7 @@ export default function BookingPage() {
   }
 
   const handleTentChange = (increment: boolean) => {
-    setUserInteracting(true)
+    setUserInteracting(true, 3000)
     const newCount = increment ? formData.numberOfTents + 1 : formData.numberOfTents - 1
 
     const maxTentsPerBooking = 5
@@ -453,13 +453,13 @@ export default function BookingPage() {
       })
       setTouched((prev) => ({ ...prev, numberOfTents: true }))
 
-      if (formData.location === "Wadi") {
+      if (formData.location === "Wadi" && newCount === 1) {
+        setShowWadiModal(true)
+      } else {
+        // Removed the error logic and show popup instead
+        setShowWadiModal(false) // Ensure modal is closed if not needed
         const newErrors = { ...errors }
-        if (newCount < 2) {
-          newErrors.numberOfTents = "Wadi location requires at least 2 tents"
-        } else {
-          delete newErrors.numberOfTents
-        }
+        delete newErrors.numberOfTents
         setErrors(newErrors)
       }
     }
@@ -918,6 +918,7 @@ export default function BookingPage() {
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
+                    "/placeholder.svg" ||
                     "/placeholder.svg"
                   }
                   alt={campingImages[currentImageIndex].alt}
@@ -939,6 +940,7 @@ export default function BookingPage() {
                     src={
                       image.src ||
                       "/placeholder.svg?height=130&width=200&query=camping scene" ||
+                      "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
@@ -1304,7 +1306,7 @@ export default function BookingPage() {
           ref={stepperSectionRef}
           className={cn("grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6", !showBookingFlow && "hidden")}
         >
-          <div className="xl:col-span-2 space-y-3 sm:space-y-4 lg:space-y-6">
+          <div className="xl:col-span-2 space-y-3 sm:space-4 lg:space-y-6">
             {/* add an invisible anchor above the Stepper for smooth scrolling */}
             <span id="booking-stepper" className="block h-0" aria-hidden />
             <Stepper
@@ -1603,11 +1605,7 @@ export default function BookingPage() {
                             <Plus className="h-3 w-3" />
                           </Button>
                         </div>
-                        {errors.numberOfTents &&
-                          touched.numberOfTents &&
-                          formData.location === "Wadi" && ( // Add this condition
-                            <p className="text-xs text-red-600 mt-1.5 text-center">{errors.numberOfTents}</p>
-                          )}
+                        {/* Remove the error message display for Wadi minimum tents */}
                       </div>
 
                       {/* Adults */}
