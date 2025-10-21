@@ -82,9 +82,20 @@ export default function AdminDashboard() {
   })
   const [blockLoading, setBlockLoading] = useState(false)
 
+  const [locations, setLocations] = useState<
+    Array<{ _id: string; name: string; capacity: number; description?: string }>
+  >([])
+  const [locationForm, setLocationForm] = useState<{ name: string; capacity: string; description: string }>({
+    name: "",
+    capacity: "",
+    description: "",
+  })
+  const [locationLoading, setLocationLoading] = useState(false)
+
   useEffect(() => {
     fetchDashboardData()
     fetchBlocks()
+    fetchLocations()
   }, [])
 
   const fetchDashboardData = async () => {
@@ -142,6 +153,16 @@ export default function AdminDashboard() {
     }
   }
 
+  const fetchLocations = async () => {
+    try {
+      const res = await fetch("/api/locations")
+      const data = await res.json()
+      setLocations(data.locations || [])
+    } catch (e) {
+      console.error("[locations] fetch error", e)
+    }
+  }
+
   const addBlock = async () => {
     if (!blockForm.date) {
       toast.error("Please select a date to block")
@@ -168,6 +189,36 @@ export default function AdminDashboard() {
     }
   }
 
+  const addLocation = async () => {
+    if (!locationForm.name || !locationForm.capacity) {
+      toast.error("Please fill in all required fields")
+      return
+    }
+    setLocationLoading(true)
+    try {
+      const res = await fetch("/api/locations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: locationForm.name,
+          capacity: Number.parseInt(locationForm.capacity),
+          description: locationForm.description,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || "Failed to add location")
+      }
+      toast.success("Location added successfully")
+      setLocationForm({ name: "", capacity: "", description: "" })
+      await fetchLocations()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to add location")
+    } finally {
+      setLocationLoading(false)
+    }
+  }
+
   const removeBlock = async (id: string) => {
     try {
       const res = await fetch(`/api/blocked-dates/${id}`, { method: "DELETE" })
@@ -176,6 +227,17 @@ export default function AdminDashboard() {
       await fetchBlocks()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to remove block")
+    }
+  }
+
+  const removeLocation = async (id: string) => {
+    try {
+      const res = await fetch(`/api/locations/${id}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Failed to remove location")
+      toast.success("Location deleted")
+      await fetchLocations()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to remove location")
     }
   }
 
@@ -470,6 +532,104 @@ export default function AdminDashboard() {
                             variant="outline"
                             size="sm"
                             onClick={() => removeBlock(b._id)}
+                            className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/95 backdrop-blur-sm border-[#D3B88C]/30 shadow-xl mb-8">
+          <CardHeader className="border-b border-[#D3B88C]/20 p-6">
+            <CardTitle className="text-[#3C2317] text-xl font-semibold flex items-center">
+              <MapPin className="w-5 h-5 mr-3 text-[#D3B88C]" />
+              Manage Locations
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="location-name" className="text-[#3C2317]">
+                  Location Name
+                </Label>
+                <Input
+                  id="location-name"
+                  placeholder="e.g., Desert Camp A"
+                  value={locationForm.name}
+                  onChange={(e) => setLocationForm((p) => ({ ...p, name: e.target.value }))}
+                  className="border-[#D3B88C] bg-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="location-capacity" className="text-[#3C2317]">
+                  Capacity (tents)
+                </Label>
+                <Input
+                  id="location-capacity"
+                  type="number"
+                  placeholder="e.g., 10"
+                  value={locationForm.capacity}
+                  onChange={(e) => setLocationForm((p) => ({ ...p, capacity: e.target.value }))}
+                  className="border-[#D3B88C] bg-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="location-desc" className="text-[#3C2317]">
+                  Description (optional)
+                </Label>
+                <Input
+                  id="location-desc"
+                  placeholder="e.g., Near water source"
+                  value={locationForm.description}
+                  onChange={(e) => setLocationForm((p) => ({ ...p, description: e.target.value }))}
+                  className="border-[#D3B88C] bg-white"
+                />
+              </div>
+            </div>
+            <div>
+              <Button onClick={addLocation} disabled={locationLoading} className="cursor-pointer">
+                {locationLoading ? "Saving..." : "Add Location"}
+              </Button>
+            </div>
+
+            <div className="overflow-x-auto border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-[#D3B88C]/30 bg-gradient-to-r from-[#3C2317]/90 to-[#5D4037]/90">
+                    <TableHead className="text-[#FBF9D9] font-bold py-3 px-4">Name</TableHead>
+                    <TableHead className="text-[#FBF9D9] font-bold py-3 px-4">Capacity</TableHead>
+                    <TableHead className="text-[#FBF9D9] font-bold py-3 px-4">Description</TableHead>
+                    <TableHead className="text-[#FBF9D9] font-bold py-3 px-4">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {locations.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="py-6 text-center text-[#3C2317]/60">
+                        No locations added yet.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    locations.map((loc: any, i: number) => (
+                      <TableRow
+                        key={loc._id}
+                        className={`border-[#D3B88C]/20 ${i % 2 === 0 ? "bg-white" : "bg-[#FBF9D9]/30"}`}
+                      >
+                        <TableCell className="py-3 px-4 font-semibold text-[#3C2317]">{loc.name}</TableCell>
+                        <TableCell className="py-3 px-4 text-[#3C2317]">{loc.capacity} tents</TableCell>
+                        <TableCell className="py-3 px-4 text-[#3C2317]/70">{loc.description || "-"}</TableCell>
+                        <TableCell className="py-3 px-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeLocation(loc._id)}
                             className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white cursor-pointer"
                           >
                             <Trash2 className="w-4 h-4" />

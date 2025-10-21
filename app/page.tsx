@@ -11,6 +11,10 @@ import Link from "next/link"
 import Image from "next/image"
 import { calculateBookingPrice, fetchPricingSettings } from "@/lib/pricing"
 import type { BookingFormData, Settings } from "@/lib/types"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Calendar, Users, DollarSign } from "lucide-react"
 
 const DEFAULT_SETTINGS = {
   tentPrice: 1297, // Base price for weekdays and multiple tents
@@ -855,7 +859,9 @@ export default function BookingPage() {
                 <Image
                   src={
                     campingImages[currentImageIndex].src ||
-                    "/placeholder.svg?height=420&width=1000&query=luxury desert camping"
+                    "/placeholder.svg?height=420&width=1000&query=luxury desert camping" ||
+                    "/placeholder.svg" ||
+                    "/placeholder.svg"
                   }
                   alt={campingImages[currentImageIndex].alt}
                   fill
@@ -882,6 +888,302 @@ export default function BookingPage() {
                 </div>
               ))}
             </div>
+          </div>
+
+          <div className="flex justify-center">
+            <button
+              onClick={() => setShowBookingFlow(true)}
+              className="bg-[#3C2317] hover:bg-[#5D4037] text-[#FBF9D9] px-8 py-3 rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
+              Start Your Booking
+            </button>
+          </div>
+        </div>
+
+        <div
+          ref={stepperSectionRef}
+          className={cn("grid grid-cols-1 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6", !showBookingFlow && "hidden")}
+        >
+          <div className="xl:col-span-2 space-y-3 sm:space-y-4 lg:space-y-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold text-[#3C2317]">Book Your Experience</h2>
+              <button
+                onClick={() => setShowBookingFlow(false)}
+                className="text-[#3C2317] hover:text-[#5D4037] transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Step 1: Date & Location */}
+            {uiStep === 1 && (
+              <Card className="border-[#D3B88C]/50 shadow-lg bg-[#FBF9D9]/80 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-[#D3B88C]/20 to-[#E6CFA9]/20 border-b border-[#D3B88C]/50">
+                  <CardTitle className="text-[#3C2317] flex items-center space-x-2">
+                    <Calendar className="w-5 h-5" />
+                    <span>Step 1: Choose Your Date & Location</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  <div>
+                    <Label htmlFor="bookingDate" className="text-[#3C2317] font-medium mb-2 block">
+                      Select Date *
+                    </Label>
+                    <Input
+                      id="bookingDate"
+                      type="date"
+                      value={formData.bookingDate}
+                      onChange={(e) => handleInputChange("bookingDate", e.target.value)}
+                      onBlur={(e) => handleBlur("bookingDate", e.target.value)}
+                      min={minDateString}
+                      className="border-[#D3B88C] bg-white"
+                    />
+                    {touched.bookingDate && errors.bookingDate && (
+                      <p className="text-red-600 text-sm mt-1">{errors.bookingDate}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-[#3C2317] font-medium mb-2 block">Location *</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {["Desert", "Mountain", "Wadi"].map((loc) => (
+                        <button
+                          key={loc}
+                          onClick={() => handleLocationChange(loc)}
+                          className={cn(
+                            "p-3 rounded-lg border-2 transition-all",
+                            formData.location === loc
+                              ? "border-[#3C2317] bg-[#3C2317] text-[#FBF9D9]"
+                              : "border-[#D3B88C] bg-white text-[#3C2317] hover:border-[#3C2317]",
+                          )}
+                        >
+                          {loc}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-[#3C2317] font-medium mb-2 block">Number of Tents *</Label>
+                    <div className="flex items-center space-x-4">
+                      <button
+                        onClick={() => handleTentChange(false)}
+                        className="bg-[#D3B88C] hover:bg-[#C4A876] text-[#3C2317] px-4 py-2 rounded-lg"
+                      >
+                        −
+                      </button>
+                      <span className="text-2xl font-bold text-[#3C2317] w-12 text-center">
+                        {formData.numberOfTents}
+                      </span>
+                      <button
+                        onClick={() => handleTentChange(true)}
+                        className="bg-[#D3B88C] hover:bg-[#C4A876] text-[#3C2317] px-4 py-2 rounded-lg"
+                      >
+                        +
+                      </button>
+                    </div>
+                    {locationMessage && <p className="text-amber-600 text-sm mt-2">{locationMessage}</p>}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleStepChange(2)}
+                      className="flex-1 bg-[#3C2317] hover:bg-[#5D4037] text-[#FBF9D9] px-6 py-3 rounded-lg font-semibold transition-all"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 2: Personal Details & Add-ons */}
+            {uiStep === 2 && (
+              <Card className="border-[#D3B88C]/50 shadow-lg bg-[#FBF9D9]/80 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-[#D3B88C]/20 to-[#E6CFA9]/20 border-b border-[#D3B88C]/50">
+                  <CardTitle className="text-[#3C2317] flex items-center space-x-2">
+                    <Users className="w-5 h-5" />
+                    <span>Step 2: Your Details & Add-ons</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  <div>
+                    <Label htmlFor="customerName" className="text-[#3C2317] font-medium mb-2 block">
+                      Full Name *
+                    </Label>
+                    <Input
+                      id="customerName"
+                      value={formData.customerName}
+                      onChange={(e) => handleInputChange("customerName", e.target.value)}
+                      onBlur={(e) => handleBlur("customerName", e.target.value)}
+                      className="border-[#D3B88C] bg-white"
+                    />
+                    {touched.customerName && errors.customerName && (
+                      <p className="text-red-600 text-sm mt-1">{errors.customerName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="customerEmail" className="text-[#3C2317] font-medium mb-2 block">
+                      Email *
+                    </Label>
+                    <Input
+                      id="customerEmail"
+                      type="email"
+                      value={formData.customerEmail}
+                      onChange={(e) => handleInputChange("customerEmail", e.target.value)}
+                      onBlur={(e) => handleBlur("customerEmail", e.target.value)}
+                      className="border-[#D3B88C] bg-white"
+                    />
+                    {touched.customerEmail && errors.customerEmail && (
+                      <p className="text-red-600 text-sm mt-1">{errors.customerEmail}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="customerPhone" className="text-[#3C2317] font-medium mb-2 block">
+                      Phone *
+                    </Label>
+                    <Input
+                      id="customerPhone"
+                      value={formData.customerPhone}
+                      onChange={(e) => handleInputChange("customerPhone", e.target.value)}
+                      onBlur={(e) => handleBlur("customerPhone", e.target.value)}
+                      className="border-[#D3B88C] bg-white"
+                    />
+                    {touched.customerPhone && errors.customerPhone && (
+                      <p className="text-red-600 text-sm mt-1">{errors.customerPhone}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-[#3C2317] font-medium mb-3 block">Add-ons</Label>
+                    <div className="space-y-2">
+                      {[
+                        { key: "charcoal", label: "Premium Charcoal - AED 60" },
+                        { key: "firewood", label: "Premium Firewood - AED 75" },
+                        { key: "portableToilet", label: "Portable Toilet - AED 200" },
+                      ].map(({ key, label }) => (
+                        <label key={key} className="flex items-center space-x-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={formData.addOns[key as keyof typeof formData.addOns]}
+                            onChange={(e) => handleAddOnChange(key as keyof typeof formData.addOns, e.target.checked)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-[#3C2317]">{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleStepChange(1)}
+                      className="flex-1 border-2 border-[#D3B88C] text-[#3C2317] px-6 py-3 rounded-lg font-semibold hover:bg-[#D3B88C]/10 transition-all"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={() => handleStepChange(3)}
+                      className="flex-1 bg-[#3C2317] hover:bg-[#5D4037] text-[#FBF9D9] px-6 py-3 rounded-lg font-semibold transition-all"
+                    >
+                      Review & Pay
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Step 3: Review & Payment */}
+            {uiStep === 3 && (
+              <Card className="border-[#D3B88C]/50 shadow-lg bg-[#FBF9D9]/80 backdrop-blur-sm">
+                <CardHeader className="bg-gradient-to-r from-[#D3B88C]/20 to-[#E6CFA9]/20 border-b border-[#D3B88C]/50">
+                  <CardTitle className="text-[#3C2317] flex items-center space-x-2">
+                    <DollarSign className="w-5 h-5" />
+                    <span>Step 3: Review & Payment</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  <div className="bg-white/80 p-4 rounded-lg border border-[#D3B88C]/30">
+                    <h4 className="font-bold text-[#3C2317] mb-3">Booking Summary</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-[#3C2317]/70">Date:</span>
+                        <span className="font-semibold text-[#3C2317]">{formData.bookingDate}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3C2317]/70">Location:</span>
+                        <span className="font-semibold text-[#3C2317]">{formData.location}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-[#3C2317]/70">Tents:</span>
+                        <span className="font-semibold text-[#3C2317]">{formData.numberOfTents}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-[#0891b2]/10 p-4 rounded-lg border border-[#0891b2]/30">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[#3C2317] font-semibold">Total Price:</span>
+                      <span className="text-2xl font-bold text-[#0891b2]">AED {pricing.total.toFixed(2)}</span>
+                    </div>
+                    <p className="text-xs text-[#3C2317]/60">Including VAT</p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => handleStepChange(2)}
+                      className="flex-1 border-2 border-[#D3B88C] text-[#3C2317] px-6 py-3 rounded-lg font-semibold hover:bg-[#D3B88C]/10 transition-all"
+                    >
+                      Back
+                    </button>
+                    <button
+                      onClick={handleSubmit}
+                      disabled={isLoading}
+                      className="flex-1 bg-[#3C2317] hover:bg-[#5D4037] disabled:opacity-50 text-[#FBF9D9] px-6 py-3 rounded-lg font-semibold transition-all"
+                    >
+                      {isLoading ? "Processing..." : "Complete Booking"}
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Sidebar with pricing summary */}
+          <div className="xl:col-span-1">
+            <Card className="border-[#D3B88C]/50 shadow-lg bg-[#FBF9D9]/80 backdrop-blur-sm sticky top-24">
+              <CardHeader className="bg-gradient-to-r from-[#D3B88C]/20 to-[#E6CFA9]/20 border-b border-[#D3B88C]/50">
+                <CardTitle className="text-[#3C2317]">Price Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[#3C2317]/70">Base Price:</span>
+                    <span className="font-semibold text-[#3C2317]">AED {pricing.basePrice.toFixed(2)}</span>
+                  </div>
+                  {pricing.addOnsTotal > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-[#3C2317]/70">Add-ons:</span>
+                      <span className="font-semibold text-[#3C2317]">AED {pricing.addOnsTotal.toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-[#D3B88C]/30 pt-2">
+                    <span className="text-[#3C2317]/70">Subtotal:</span>
+                    <span className="font-semibold text-[#3C2317]">AED {pricing.subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#3C2317]/70">VAT (5%):</span>
+                    <span className="font-semibold text-[#3C2317]">AED {pricing.vat.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-[#D3B88C]/30 pt-2 text-lg">
+                    <span className="font-bold text-[#3C2317]">Total:</span>
+                    <span className="font-bold text-[#0891b2]">AED {pricing.total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
