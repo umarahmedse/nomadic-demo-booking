@@ -127,7 +127,7 @@ export default function BookingPage() {
         const step1Errors = []
         if (!formData.bookingDate) step1Errors.push("bookingDate")
         if (!formData.location) step1Errors.push("location")
-        if (formData.location === "Wadi" && formData.numberOfTents < 2) showWadiModal(true)
+        if (formData.location === "Wadi" && formData.numberOfTents < 2) setShowWadiModal(true)
 
         // Add proper date validation for step 1
         if (formData.bookingDate) {
@@ -2077,7 +2077,7 @@ export default function BookingPage() {
                     </span>
                   </div>
 
-                  {formData.location === "Wadi" && formData.numberOfTents < 2 && (
+                  {/* {formData.location === "Wadi" && formData.numberOfTents < 2 && (
                     <div className="mt-2 sm:mt-3 p-3 sm:p-4 bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-400 rounded-lg shadow-sm">
                       <div className="flex items-start space-x-2 sm:space-x-3">
                         <div className="w-5 h-5 sm:w-6 sm:h-6 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -2091,7 +2091,7 @@ export default function BookingPage() {
                         </div>
                       </div>
                     </div>
-                  )}
+                  )} */}
 
                   {formData.location === "Wadi" && (
                     <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
