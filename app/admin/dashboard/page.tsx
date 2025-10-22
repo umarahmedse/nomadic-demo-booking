@@ -2,7 +2,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -21,13 +20,35 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { MapPin, Calendar, Users, DollarSign, Eye, TrendingUp, Tent, Star, Trash2, AlertCircle } from "lucide-react"
+import {
+  MapPin,
+  Calendar,
+  Users,
+  DollarSign,
+  Eye,
+  TrendingUp,
+  Tent,
+  Star,
+  Trash2,
+  AlertCircle,
+  Settings,
+  Search,
+} from "lucide-react"
 import { toast } from "sonner"
 import type { Booking } from "@/lib/types"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import InvoiceDownloadButton from "@/components/invoice-download-button"
+import Link from "next/link"
+
+let useSession: any = () => ({ data: { user: { username: "Admin" } } })
+try {
+  const auth = require("next-auth/react")
+  useSession = auth.useSession
+} catch (e) {
+  // Fallback if next-auth not available
+}
 
 function formatDate(date: string | Date) {
   try {
@@ -51,6 +72,7 @@ function getStatusBadge(booking: Booking) {
 export default function AdminDashboard() {
   const { data: session } = useSession()
   const [bookings, setBookings] = useState<Booking[]>([])
+  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
@@ -81,48 +103,89 @@ export default function AdminDashboard() {
     reason: "",
   })
   const [blockLoading, setBlockLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+  const [isManagementMode, setIsManagementMode] = useState(false)
+  const [localStartDate, setLocalStartDate] = useState("")
+  const [localEndDate, setLocalEndDate] = useState("")
 
   useEffect(() => {
     fetchDashboardData()
     fetchBlocks()
   }, [])
 
+  useEffect(() => {
+    filterBookings()
+  }, [bookings, searchTerm, startDate, endDate])
+
+  const filterBookings = () => {
+    let filtered = bookings
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (booking) =>
+          booking.customerName.toLowerCase().includes(term) ||
+          booking.customerEmail.toLowerCase().includes(term) ||
+          booking.customerPhone?.toLowerCase().includes(term),
+      )
+    }
+
+    if (startDate) {
+      const start = new Date(startDate)
+      filtered = filtered.filter((booking) => new Date(booking.bookingDate) >= start)
+    }
+
+    if (endDate) {
+      const end = new Date(endDate)
+      end.setHours(23, 59, 59, 999)
+      filtered = filtered.filter((booking) => new Date(booking.bookingDate) <= end)
+    }
+
+    setFilteredBookings(filtered)
+  }
+
+  const calculateManagementStats = () => {
+    const totalOrders = filteredBookings.length
+    const totalRevenue = filteredBookings.reduce((sum, booking) => sum + booking.total, 0)
+    const totalResources = filteredBookings.reduce((sum, booking) => sum + booking.numberOfTents, 0)
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+
+    return {
+      totalOrders,
+      totalRevenue,
+      totalResources,
+      averageOrderValue,
+    }
+  }
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      console.log("Fetching dashboard data...")
 
-      // Fetch stats
       const statsResponse = await fetch("/api/stats", {
         cache: "no-store",
       })
-      console.log("Stats response status:", statsResponse.status)
       if (!statsResponse.ok) throw new Error("Failed to fetch stats")
       const statsData = await statsResponse.json()
-      console.log("Stats data:", statsData)
       setStats(statsData)
 
-      // Fetch chart data
       const chartResponse = await fetch("/api/charts", {
         cache: "no-store",
       })
-      console.log("Chart response status:", chartResponse.status)
       if (!chartResponse.ok) throw new Error("Failed to fetch chart data")
       const chartDataResponse = await chartResponse.json()
-      console.log("Chart data:", chartDataResponse)
       setChartData({
         monthlyBookings: chartDataResponse.monthlyBookings || [],
         locationStats: chartDataResponse.locationStats || [],
       })
 
-      // Fetch recent bookings
       const bookingsResponse = await fetch("/api/bookings?isPaid=true&limit=10", {
         cache: "no-store",
       })
-      console.log("Bookings response status:", bookingsResponse.status)
       if (!bookingsResponse.ok) throw new Error("Failed to fetch bookings")
       const bookingsData = await bookingsResponse.json()
-      console.log("Bookings data:", bookingsData)
       setBookings(bookingsData.bookings || [])
     } catch (error) {
       console.error("Error fetching dashboard data:", error)
@@ -134,7 +197,7 @@ export default function AdminDashboard() {
 
   const fetchBlocks = async () => {
     try {
-      const res = await fetch("/api/blocked-dates?scope=") // empty scope -> all
+      const res = await fetch("/api/blocked-dates?scope=")
       const data = await res.json()
       setBlocks(data.items || [])
     } catch (e) {
@@ -201,6 +264,9 @@ export default function AdminDashboard() {
     }
   }
 
+  const stats_data = calculateManagementStats()
+  const username = session?.user?.username || "Admin"
+
   return (
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto p-6">
@@ -209,7 +275,7 @@ export default function AdminDashboard() {
             <div>
               <h1 className="text-2xl font-bold text-[#3C2317] mb-2">Dashboard Overview</h1>
               <p className="text-[#3C2317]/80 text-base">
-                Welcome back, {session?.user?.username}. Here's what's happening with your bookings.
+                Welcome back, {username}. Here's what's happening with your bookings.
               </p>
             </div>
             <div className="flex items-center space-x-3">
@@ -380,10 +446,18 @@ export default function AdminDashboard() {
 
         <Card className="bg-white/95 backdrop-blur-sm border-[#D3B88C]/30 shadow-xl mb-8">
           <CardHeader className="border-b border-[#D3B88C]/20 p-6">
-            <CardTitle className="text-[#3C2317] text-xl font-semibold flex items-center">
-              <Calendar className="w-5 h-5 mr-3 text-[#D3B88C]" />
-              Blocked Dates (Per Product)
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-[#3C2317] text-xl font-semibold flex items-center">
+                <Calendar className="w-5 h-5 mr-3 text-[#D3B88C]" />
+                Blocked Dates (Per Product)
+              </CardTitle>
+              <Link href="/admin/settings">
+                <Button className="bg-gradient-to-r from-[#3C2317] to-[#5D4037] hover:from-[#3C2317]/90 hover:to-[#5D4037]/90 text-[#FBF9D9] flex items-center gap-2 cursor-pointer">
+                  <Settings className="w-4 h-4" />
+                  Manage in Settings
+                </Button>
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
             <div className="grid md:grid-cols-3 gap-4">
@@ -484,6 +558,146 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
+        <Card className="bg-white/95 backdrop-blur-sm border-[#D3B88C]/30 shadow-lg mb-6">
+          <div className="p-6 space-y-4">
+            <div className="flex flex-col md:flex-row gap-4 items-end">
+              <div className="flex-1">
+                <label className="text-sm font-semibold text-[#3C2317] mb-2 block">Search Orders</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 w-4 h-4 text-[#D3B88C]" />
+                  <Input
+                    placeholder="Search by name, email, or phone..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 border-[#D3B88C]/30 focus:border-[#D3B88C] bg-white text-[#3C2317]"
+                  />
+                </div>
+              </div>
+
+              <Button
+                onClick={() => setIsManagementMode(!isManagementMode)}
+                variant={isManagementMode ? "default" : "outline"}
+                className={`h-10 px-4 flex items-center gap-2 ${
+                  isManagementMode
+                    ? "bg-[#3C2317] text-white hover:bg-[#5D4037]"
+                    : "border-[#D3B88C] text-[#3C2317] hover:bg-[#D3B88C]/10"
+                }`}
+              >
+                <Settings className="w-4 h-4" />
+                {isManagementMode ? "Management" : "View"}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="text-sm font-semibold text-[#3C2317] mb-2 block">Start Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-3 w-4 h-4 text-[#D3B88C]" />
+                  <input
+                    type="date"
+                    value={localStartDate}
+                    onChange={(e) => setLocalStartDate(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-[#D3B88C]/30 rounded-md focus:outline-none focus:border-[#D3B88C] bg-white text-[#3C2317]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-[#3C2317] mb-2 block">End Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-3 w-4 h-4 text-[#D3B88C]" />
+                  <input
+                    type="date"
+                    value={localEndDate}
+                    onChange={(e) => setLocalEndDate(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-[#D3B88C]/30 rounded-md focus:outline-none focus:border-[#D3B88C] bg-white text-[#3C2317]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2 items-end">
+                <Button
+                  onClick={() => {
+                    setStartDate(localStartDate)
+                    setEndDate(localEndDate)
+                  }}
+                  className="flex-1 bg-[#3C2317] text-white hover:bg-[#5D4037] h-10"
+                >
+                  Apply
+                </Button>
+                <Button
+                  onClick={() => {
+                    setLocalStartDate("")
+                    setLocalEndDate("")
+                    setStartDate("")
+                    setEndDate("")
+                  }}
+                  variant="outline"
+                  className="flex-1 border-[#D3B88C] text-[#3C2317] hover:bg-[#D3B88C]/10 h-10 bg-transparent"
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {isManagementMode && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <Card className="bg-gradient-to-br from-[#FBF9D9] to-[#E6CFA9] border-[#D3B88C]/30 shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold text-[#3C2317]">Total Orders</CardTitle>
+                <div className="w-8 h-8 bg-gradient-to-br from-[#3C2317] to-[#5D4037] rounded-lg flex items-center justify-center">
+                  <Users className="w-4 h-4 text-[#FBF9D9]" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-[#3C2317]">{stats_data.totalOrders}</div>
+                <p className="text-xs text-[#3C2317]/60 mt-1">Filtered orders</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-[#FBF9D9] to-[#E6CFA9] border-[#D3B88C]/30 shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold text-[#3C2317]">Total Revenue</CardTitle>
+                <div className="w-8 h-8 bg-gradient-to-br from-[#0891b2] to-[#0e7490] rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-4 h-4 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-[#0891b2]">AED {stats_data.totalRevenue.toFixed(2)}</div>
+                <p className="text-xs text-[#3C2317]/60 mt-1">From filtered orders</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-[#FBF9D9] to-[#E6CFA9] border-[#D3B88C]/30 shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold text-[#3C2317]">Total Resources</CardTitle>
+                <div className="w-8 h-8 bg-gradient-to-br from-[#84cc16] to-[#65a30d] rounded-lg flex items-center justify-center">
+                  <Tent className="w-4 h-4 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-[#84cc16]">{stats_data.totalResources}</div>
+                <p className="text-xs text-[#3C2317]/60 mt-1">Tents / Group size</p>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-[#FBF9D9] to-[#E6CFA9] border-[#D3B88C]/30 shadow-lg">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-semibold text-[#3C2317]">Avg Order Value</CardTitle>
+                <div className="w-8 h-8 bg-gradient-to-br from-[#be123c] to-[#9f1239] rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-[#be123c]">AED {stats_data.averageOrderValue.toFixed(2)}</div>
+                <p className="text-xs text-[#3C2317]/60 mt-1">Per order average</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <Card className="bg-white/95 backdrop-blur-sm border-[#D3B88C]/30 shadow-xl">
           <CardHeader className="border-b border-[#D3B88C]/20 p-6">
             <CardTitle className="text-[#3C2317] text-xl font-semibold flex items-center">
@@ -517,347 +731,183 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {bookings.map((booking, index) => (
-                      <TableRow
-                        key={booking._id}
-                        className={`border-[#D3B88C]/20 transition-colors duration-200 ${
-                          index % 2 === 0 ? "bg-white" : "bg-[#FBF9D9]/30"
-                        }`}
-                      >
-                        <TableCell className="py-4 px-6">
-                          <div>
-                            <div className="font-semibold text-[#3C2317]">{booking.customerName}</div>
-                            <div className="text-sm text-[#3C2317]/60 hidden sm:block mt-1">
-                              {booking.customerEmail}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-[#3C2317] py-4 px-6">{formatDate(booking.bookingDate)}</TableCell>
-                        <TableCell className="text-[#3C2317] hidden sm:table-cell py-4 px-6">
-                          {booking.location}
-                        </TableCell>
-                        <TableCell className="text-[#3C2317] hidden md:table-cell py-4 px-6">
-                          {booking.numberOfTents}
-                        </TableCell>
-                        <TableCell className="font-bold text-[#0891b2] py-4 px-6">
-                          AED {booking.total.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="py-4 px-6">{getStatusBadge(booking)}</TableCell>
-                        <TableCell className="py-4 px-6">
-                          <div className="flex items-center gap-2">
-                            <InvoiceDownloadButton booking={booking} bookingType="camping" />
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setSelectedBooking(booking)}
-                                  className="border-[#D3B88C] text-[#3C2317] bg-white h-9 px-3 hover:bg-[#D3B88C] cursor-pointer"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-[#FBF9D9] to-[#E6CFA9] border-2 border-[#D3B88C]/50 shadow-2xl">
-                                <DialogHeader className="border-b border-[#D3B88C]/30 pb-6">
-                                  <DialogTitle className="text-[#3C2317] text-2xl font-bold flex items-center">
-                                    <Tent className="w-7 h-7 mr-3 text-[#D3B88C]" />
-                                    Order Details - #{selectedBooking?._id.slice(-6).toUpperCase()}
-                                  </DialogTitle>
-                                </DialogHeader>
-                                {selectedBooking && (
-                                  <div className="space-y-8 pt-6">
-                                    {/* Customer Information */}
-                                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                      <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                        <Users className="w-5 h-5 mr-3 text-[#D3B88C]" />
-                                        Customer Information
-                                      </h4>
-                                      <div className="space-y-4">
-                                        <div className="flex justify-between items-start">
-                                          <span className="text-[#3C2317]/70 font-medium">Name:</span>
-                                          <span className="font-semibold text-[#3C2317] text-right max-w-[200px] break-words">
-                                            {selectedBooking.customerName}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-start">
-                                          <span className="text-[#3C2317]/70 font-medium">Email:</span>
-                                          <span className="font-semibold text-[#3C2317] text-right max-w-[200px] break-words text-sm">
-                                            {selectedBooking.customerEmail}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-start">
-                                          <span className="text-[#3C2317]/70 font-medium">Phone:</span>
-                                          <span className="font-semibold text-[#3C2317] text-right">
-                                            {selectedBooking.customerPhone}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Booking Details */}
-                                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                      <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                        <Calendar className="w-5 h-5 mr-3 text-[#D3B88C]" />
-                                        Booking Details
-                                      </h4>
-                                      <div className="space-y-4">
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[#3C2317]/70 font-medium">Date:</span>
-                                          <span className="font-semibold text-[#3C2317]">
-                                            {formatDate(selectedBooking.bookingDate)}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[#3C2317]/70 font-medium">Location:</span>
-                                          <span className="font-semibold text-[#3C2317]">
-                                            {selectedBooking.location}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[#3C2317]/70 font-medium">Arrival Time:</span>
-                                          <span className="font-semibold text-[#3C2317]">
-                                            {selectedBooking.arrivalTime || "Not specified"}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[#3C2317]/70 font-medium">Tents:</span>
-                                          <span className="font-semibold text-[#3C2317]">
-                                            {selectedBooking.numberOfTents}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[#3C2317]/70 font-medium">Adults:</span>
-                                          <span className="font-semibold text-[#3C2317]">
-                                            {selectedBooking.adults || "Not specified"}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[#3C2317]/70 font-medium">Children:</span>
-                                          <span className="font-semibold text-[#3C2317]">
-                                            {selectedBooking.children || 0}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[#3C2317]/70 font-medium">Has Children:</span>
-                                          <span className="font-semibold text-[#3C2317]">
-                                            {selectedBooking.hasChildren ? "Yes" : "No"}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Sleeping Arrangements */}
-                                    {selectedBooking.sleepingArrangements &&
-                                      selectedBooking.sleepingArrangements.length > 0 && (
-                                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                          <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                            <Tent className="w-5 h-5 mr-3 text-[#D3B88C]" />
-                                            Sleeping Arrangements
-                                          </h4>
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {selectedBooking.sleepingArrangements.map((arrangement, index) => (
-                                              <div
-                                                key={index}
-                                                className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20"
-                                              >
-                                                <div className="flex items-center justify-between mb-2">
-                                                  <span className="font-semibold text-[#3C2317] text-sm">
-                                                    Tent #{arrangement.tentNumber}
-                                                  </span>
-                                                  <div className="w-3 h-3 bg-[#D3B88C] rounded-full"></div>
-                                                </div>
-                                                <div className="text-[#3C2317]/80 text-sm">
-                                                  {arrangement.arrangement === "all-singles" &&
-                                                    "All Single Beds (4 singles)"}
-                                                  {arrangement.arrangement === "two-doubles" &&
-                                                    "Two Double Beds (2 doubles)"}
-                                                  {arrangement.arrangement === "mix" &&
-                                                    "Mixed Arrangement (1 double + 2 singles)"}
-                                                  {arrangement.arrangement === "double-bed" && "Double Bed (1 double)"}
-                                                  {arrangement.arrangement === "custom" &&
-                                                    (arrangement.customArrangement ||
-                                                      "Custom arrangement (not specified)")}
-                                                </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      )}
-
-                                    {/* Standard Add-ons */}
-                                    {(selectedBooking.addOns.charcoal ||
-                                      selectedBooking.addOns.firewood ||
-                                      selectedBooking.addOns.portableToilet) && (
-                                      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                        <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                          <Star className="w-5 h-5 mr-3 text-[#D3B88C]" />
-                                          Standard Add-ons
-                                        </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                          {selectedBooking.addOns.charcoal && (
-                                            <div className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20">
-                                              <div className="flex items-center text-[#3C2317] mb-2">
-                                                <span className="font-semibold">Premium Charcoal</span>
-                                              </div>
-                                              {/* <p className="text-[#3C2317]/70 text-sm">High-quality charcoal for BBQ</p> */}
-                                            </div>
-                                          )}
-                                          {selectedBooking.addOns.firewood && (
-                                            <div className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20">
-                                              <div className="flex items-center text-[#3C2317] mb-2">
-                                                <span className="font-semibold">Premium Firewood</span>
-                                              </div>
-                                              {/* <p className="text-[#3C2317]/70 text-sm">Seasoned wood for campfire</p> */}
-                                            </div>
-                                          )}
-                                          {selectedBooking.addOns.portableToilet && (
-                                            <div className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20">
-                                              <div className="flex items-center text-[#3C2317] mb-2">
-                                                <span className="font-semibold">Portable Toilet</span>
-                                              </div>
-                                              {/* <p className="text-[#3C2317]/70 text-sm">Luxury portable facilities</p> */}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
-
-                                    {selectedBooking.customAddOnsWithDetails &&
-                                      selectedBooking.customAddOnsWithDetails.length > 0 && (
-                                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                          <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                            <Star className="w-5 h-5 mr-3 text-[#84cc16]" />
-                                            Additional Services
-                                          </h4>
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {selectedBooking.customAddOnsWithDetails.map(
-                                              (addOn: any, index: number) => (
-                                                <div
-                                                  key={index}
-                                                  className="bg-[#84cc16]/10 p-4 rounded-lg border border-[#84cc16]/20"
-                                                >
-                                                  <div className="flex items-center text-[#3C2317] mb-2">
-                                                    <span className="font-semibold">{addOn.name}</span>
-                                                  </div>
-                                                  <p className="text-[#3C2317]/70 text-sm">
-                                                    {addOn.description || "Additional custom service"}
-                                                  </p>
-                                                  {addOn.price && (
-                                                    <p className="text-[#0891b2] font-semibold text-sm mt-1">
-                                                      AED {addOn.price.toFixed(2)}
-                                                    </p>
-                                                  )}
-                                                </div>
-                                              ),
-                                            )}
-                                          </div>
-                                        </div>
-                                      )}
-
-                                    {/* Special Notes */}
-                                    {selectedBooking.notes && (
-                                      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                        <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 text-lg">
-                                          Special Notes
-                                        </h4>
-                                        <p className="text-[#3C2317] bg-[#E6CFA9]/40 p-4 rounded-lg leading-relaxed break-words">
-                                          {selectedBooking.notes}
-                                        </p>
-                                      </div>
-                                    )}
-
-                                    {/* Payment Summary */}
-                                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                      <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                        <DollarSign className="w-5 h-5 mr-3 text-[#D3B88C]" />
-                                        Payment Summary
-                                      </h4>
-                                      <div className="space-y-4">
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[#3C2317]/70 font-medium">Subtotal:</span>
-                                          <span className="font-semibold text-[#3C2317]">
-                                            AED {selectedBooking.subtotal.toFixed(2)}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[#3C2317]/70 font-medium">VAT (5%):</span>
-                                          <span className="font-semibold text-[#3C2317]">
-                                            AED {selectedBooking.vat.toFixed(2)}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center border-t border-[#D3B88C]/30 pt-4">
-                                          <span className="font-bold text-[#3C2317] text-xl">Total:</span>
-                                          <span className="font-bold text-[#0891b2] text-2xl">
-                                            AED {selectedBooking.total.toFixed(2)}
-                                          </span>
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[#3C2317]/70 font-medium">Status:</span>
-                                          <span>{getStatusBadge(selectedBooking)}</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </DialogContent>
-                            </Dialog>
-
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="border-red-200 text-red-600 bg-white h-9 px-3 hover:bg-red-600 hover:text-white cursor-pointer"
-                                  disabled={deleteLoading === booking._id}
-                                >
-                                  {deleteLoading === booking._id ? (
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                                  ) : (
-                                    <Trash2 className="w-4 h-4" />
-                                  )}
-                                  <span className="hidden sm:inline ml-1 text-xs">Delete</span>
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent className="bg-gradient-to-br from-[#FBF9D9] to-[#E6CFA9] border-2 border-red-200 shadow-2xl">
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle className="text-red-600 text-xl font-bold flex items-center">
-                                    <AlertCircle className="w-6 h-6 mr-3" />
-                                    Delete Order
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription className="text-[#3C2317] text-base leading-relaxed">
-                                    Are you sure you want to delete this order? This action cannot be undone.
-                                    <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                                      <div className="text-sm space-y-2">
-                                        <div>
-                                          <strong>Order:</strong> #{booking._id.slice(-6).toUpperCase()}
-                                        </div>
-                                        <div>
-                                          <strong>Customer:</strong> {booking.customerName}
-                                        </div>
-                                        <div>
-                                          <strong>Total:</strong> AED {booking.total.toFixed(2)}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel className="border-[#D3B88C] text-[#3C2317]">
-                                    Cancel
-                                  </AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteBooking(booking._id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete Order
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
+                    {filteredBookings.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="py-6 text-center text-[#3C2317]/60">
+                          {searchTerm || startDate || endDate
+                            ? "No orders found matching your filters."
+                            : "No orders available."}
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      filteredBookings.map((booking, index) => (
+                        <TableRow
+                          key={booking._id}
+                          className={`border-[#D3B88C]/20 transition-colors duration-200 ${
+                            index % 2 === 0 ? "bg-white" : "bg-[#FBF9D9]/30"
+                          }`}
+                        >
+                          <TableCell className="py-4 px-6">
+                            <div>
+                              <div className="font-semibold text-[#3C2317]">{booking.customerName}</div>
+                              <div className="text-sm text-[#3C2317]/60 hidden sm:block mt-1">
+                                {booking.customerEmail}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-[#3C2317] py-4 px-6">{formatDate(booking.bookingDate)}</TableCell>
+                          <TableCell className="text-[#3C2317] hidden sm:table-cell py-4 px-6">
+                            {booking.location}
+                          </TableCell>
+                          <TableCell className="text-[#3C2317] hidden md:table-cell py-4 px-6">
+                            {booking.numberOfTents}
+                          </TableCell>
+                          <TableCell className="font-bold text-[#0891b2] py-4 px-6">
+                            AED {booking.total.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="py-4 px-6">{getStatusBadge(booking)}</TableCell>
+                          <TableCell className="py-4 px-6">
+                            <div className="flex items-center gap-2">
+                              <InvoiceDownloadButton booking={booking} bookingType="camping" />
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSelectedBooking(booking)}
+                                    className="border-[#D3B88C] text-[#3C2317] bg-white h-9 px-3 hover:bg-[#D3B88C] cursor-pointer"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-[#FBF9D9] to-[#E6CFA9] border-2 border-[#D3B88C]/50 shadow-2xl">
+                                  <DialogHeader className="border-b border-[#D3B88C]/30 pb-6">
+                                    <DialogTitle className="text-[#3C2317] text-2xl font-bold flex items-center">
+                                      <Tent className="w-7 h-7 mr-3 text-[#D3B88C]" />
+                                      Order Details - #{selectedBooking?._id.slice(-6).toUpperCase()}
+                                    </DialogTitle>
+                                  </DialogHeader>
+                                  {selectedBooking && (
+                                    <div className="space-y-6 pt-6">
+                                      <div>
+                                        <h3 className="text-lg font-semibold text-[#3C2317] mb-4">
+                                          Customer Information
+                                        </h3>
+                                        <div className="space-y-3">
+                                          <div>
+                                            <Label className="text-sm font-medium text-[#3C2317]">Name</Label>
+                                            <p className="text-[#3C2317]">{selectedBooking.customerName}</p>
+                                          </div>
+                                          <div>
+                                            <Label className="text-sm font-medium text-[#3C2317]">Email</Label>
+                                            <p className="text-[#3C2317]">{selectedBooking.customerEmail}</p>
+                                          </div>
+                                          <div>
+                                            <Label className="text-sm font-medium text-[#3C2317]">Phone</Label>
+                                            <p className="text-[#3C2317]">{selectedBooking.customerPhone}</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <h3 className="text-lg font-semibold text-[#3C2317] mb-4">Booking Details</h3>
+                                        <div className="space-y-3">
+                                          <div>
+                                            <Label className="text-sm font-medium text-[#3C2317]">Date</Label>
+                                            <p className="text-[#3C2317]">{formatDate(selectedBooking.bookingDate)}</p>
+                                          </div>
+                                          <div>
+                                            <Label className="text-sm font-medium text-[#3C2317]">Location</Label>
+                                            <p className="text-[#3C2317]">{selectedBooking.location}</p>
+                                          </div>
+                                          <div>
+                                            <Label className="text-sm font-medium text-[#3C2317]">Tents</Label>
+                                            <p className="text-[#3C2317]">{selectedBooking.numberOfTents}</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <h3 className="text-lg font-semibold text-[#3C2317] mb-4">
+                                          Payment Information
+                                        </h3>
+                                        <div className="space-y-3">
+                                          <div>
+                                            <Label className="text-sm font-medium text-[#3C2317]">Total Amount</Label>
+                                            <p className="text-[#0891b2] font-bold">
+                                              AED {selectedBooking.total.toFixed(2)}
+                                            </p>
+                                          </div>
+                                          <div>
+                                            <Label className="text-sm font-medium text-[#3C2317]">Status</Label>
+                                            <Badge
+                                              className={`font-medium ${selectedBooking.isPaid ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}
+                                            >
+                                              {selectedBooking.isPaid ? "Paid" : "Pending"}
+                                            </Badge>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
+
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="border-red-200 text-red-600 bg-white h-9 px-3 hover:bg-red-600 hover:text-white cursor-pointer"
+                                    disabled={deleteLoading === booking._id}
+                                  >
+                                    {deleteLoading === booking._id ? (
+                                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                                    ) : (
+                                      <Trash2 className="w-4 h-4" />
+                                    )}
+                                    <span className="hidden sm:inline ml-1 text-xs">Delete</span>
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="bg-gradient-to-br from-[#FBF9D9] to-[#E6CFA9] border-2 border-red-200 shadow-2xl">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-red-600 text-xl font-bold flex items-center">
+                                      <AlertCircle className="w-6 h-6 mr-3" />
+                                      Delete Order
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription className="text-[#3C2317] text-base leading-relaxed">
+                                      Are you sure you want to delete this order? This action cannot be undone.
+                                      <div className="mt-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                                        <div className="text-sm space-y-2">
+                                          <div>
+                                            <strong>Order:</strong> #{booking._id.slice(-6).toUpperCase()}
+                                          </div>
+                                          <div>
+                                            <strong>Customer:</strong> {booking.customerName}
+                                          </div>
+                                          <div>
+                                            <strong>Total:</strong> AED {booking.total.toFixed(2)}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="border-[#D3B88C] text-[#3C2317]">
+                                      Cancel
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteBooking(booking._id)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete Order
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
