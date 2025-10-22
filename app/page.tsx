@@ -2581,7 +2581,15 @@ export default function BookingPage() {
                           DEFAULT_SETTINGS.wadiSurcharge}
                       </span>
                     </div>
-
+<div className="flex justify-between items-center">
+                      <span className="text-[11px] sm:text-xs text-[#3C2317]/80 flex items-center gap-2">
+                        <i className="fa-solid fa-mountain"></i> Wadi surcharge (1 tent booking)
+                      </span>
+                      <span className="font-semibold text-[11px] sm:text-xs text-[#3C2317]">
+                        AED{" "}
+                        500
+                      </span>
+                    </div>
                     {/* Children bonus */}
                     {children > 0 && (
                       <div className="border-t border-[#3C2317]/20 pt-2 sm:pt-3 mt-2 space-y-1">
