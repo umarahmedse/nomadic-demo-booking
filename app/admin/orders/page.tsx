@@ -3,9 +3,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -23,22 +21,48 @@ import {
 import { Search, Eye, Trash2, Calendar, MapPin, Users, DollarSign, Tent, AlertCircle, Star } from "lucide-react"
 import { toast } from "sonner"
 import type { Booking } from "@/lib/types"
+import { OrderFilters } from "@/components/order-filters"
+import { OrderSummaryStats } from "@/components/order-summary-stats"
 
 export default function OrdersPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
   const [locationFilter, setLocationFilter] = useState("all")
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalBookings, setTotalBookings] = useState(0)
+  const [isManagementMode, setIsManagementMode] = useState(false)
   const itemsPerPage = 7
+
+  const [managementStats, setManagementStats] = useState({
+    totalOrders: 0,
+    totalRevenue: 0,
+    totalResources: 0,
+    averageOrderValue: 0,
+  })
 
   useEffect(() => {
     fetchBookings()
-  }, [searchTerm, locationFilter, currentPage])
+  }, [searchTerm, locationFilter, currentPage, startDate, endDate])
+
+  const calculateManagementStats = (filteredBookings: Booking[]) => {
+    const totalOrders = filteredBookings.length
+    const totalRevenue = filteredBookings.reduce((sum, b) => sum + b.total, 0)
+    const totalResources = filteredBookings.reduce((sum, b) => sum + b.numberOfTents, 0)
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+
+    setManagementStats({
+      totalOrders,
+      totalRevenue,
+      totalResources,
+      averageOrderValue,
+    })
+  }
 
   const fetchBookings = async () => {
     try {
@@ -48,12 +72,15 @@ export default function OrdersPage() {
       params.append("isPaid", "true")
       params.append("page", currentPage.toString())
       params.append("limit", itemsPerPage.toString())
+      if (startDate) params.append("startDate", startDate)
+      if (endDate) params.append("endDate", endDate)
 
       const response = await fetch(`/api/bookings?${params}`)
       const data = await response.json()
       setBookings(data.bookings || [])
       setTotalPages(data.pagination?.pages || 1)
       setTotalBookings(data.pagination?.total || 0)
+      calculateManagementStats(data.bookings || [])
     } catch (error) {
       console.error("Error fetching bookings:", error)
       toast.error("Failed to fetch bookings")
@@ -80,28 +107,6 @@ export default function OrdersPage() {
       toast.error("Failed to delete booking")
     } finally {
       setDeleteLoading(null)
-    }
-  }
-
-  const handleStatusUpdate = async (bookingId: string, newStatus: boolean) => {
-    try {
-      const response = await fetch(`/api/bookings/${bookingId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isPaid: newStatus }),
-      })
-
-      if (response.ok) {
-        setBookings(
-          bookings.map((booking) => (booking._id === bookingId ? { ...booking, isPaid: newStatus } : booking)),
-        )
-        toast.success(`Status updated to ${newStatus ? "Paid" : "Pending"}`)
-      } else {
-        toast.error("Failed to update status")
-      }
-    } catch (error) {
-      console.error("Error updating status:", error)
-      toast.error("Failed to update status")
     }
   }
 
@@ -136,41 +141,27 @@ export default function OrdersPage() {
           </div>
         </div>
 
-        <Card className="bg-white/90 backdrop-blur-sm border-[#D3B88C]/30 shadow-lg mb-8">
-          <CardHeader className="border-b border-[#D3B88C]/20 pb-4">
-            <CardTitle className="text-[#3C2317] text-xl font-semibold flex items-center">
-              <Search className="w-5 h-5 mr-3 text-[#D3B88C]" />
-              Search & Filter Orders
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-4 top-4 h-5 w-5 text-[#3C2317]/50" />
-                  <Input
-                    placeholder="Search by name, email, or phone..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-10 border-[#D3B88C]/30 focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/70 text-base"
-                  />
-                </div>
-              </div>
+        <OrderFilters
+          onSearchChange={setSearchTerm}
+          onDateRangeChange={(start, end) => {
+            setStartDate(start)
+            setEndDate(end)
+            setCurrentPage(1)
+          }}
+          onManagementToggle={setIsManagementMode}
+          isManagementMode={isManagementMode}
+          searchTerm={searchTerm}
+          startDate={startDate}
+          endDate={endDate}
+        />
 
-              <Select value={locationFilter} onValueChange={setLocationFilter}>
-                <SelectTrigger className="w-full md:w-56 h-12 border-[#D3B88C]/30 focus:border-[#3C2317] bg-white/70 text-base">
-                  <SelectValue placeholder="All Locations" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Locations</SelectItem>
-                  <SelectItem value="Desert">Desert</SelectItem>
-                  <SelectItem value="Mountain">Mountain</SelectItem>
-                  <SelectItem value="Wadi">Wadi</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        <OrderSummaryStats
+          totalOrders={managementStats.totalOrders}
+          totalRevenue={managementStats.totalRevenue}
+          totalResources={managementStats.totalResources}
+          averageOrderValue={managementStats.averageOrderValue}
+          isManagementMode={isManagementMode}
+        />
 
         <Card className="bg-white/95 backdrop-blur-sm border-[#D3B88C]/30 shadow-xl">
           <CardContent className="p-0">
@@ -251,261 +242,262 @@ export default function OrdersPage() {
                           <TableCell className="py-4 px-6">{getStatusBadge(booking)}</TableCell>
                           <TableCell className="py-4 px-6">
                             <div className="flex items-center gap-2">
-                             <Dialog>
-                                                        <DialogTrigger asChild>
-                                                          <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => setSelectedBooking(booking)}
-                                                            className="border-[#D3B88C] text-[#3C2317] bg-white h-9 px-3 hover:bg-[#D3B88C] cursor-pointer"
-                                                          >
-                                                            <Eye className="w-4 h-4" />
-                                                          </Button>
-                                                        </DialogTrigger>
-                                                        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-[#FBF9D9] to-[#E6CFA9] border-2 border-[#D3B88C]/50 shadow-2xl">
-                                                          <DialogHeader className="border-b border-[#D3B88C]/30 pb-6">
-                                                            <DialogTitle className="text-[#3C2317] text-2xl font-bold flex items-center">
-                                                              <Tent className="w-7 h-7 mr-3 text-[#D3B88C]" />
-                                                              Order Details - #{selectedBooking?._id.slice(-6).toUpperCase()}
-                                                            </DialogTitle>
-                                                          </DialogHeader>
-                                                          {selectedBooking && (
-                                                            <div className="space-y-8 pt-6">
-                                                              {/* Customer Information */}
-                                                              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                                                <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                                                  <Users className="w-5 h-5 mr-3 text-[#D3B88C]" />
-                                                                  Customer Information
-                                                                </h4>
-                                                                <div className="space-y-4">
-                                                                  <div className="flex justify-between items-start">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Name:</span>
-                                                                    <span className="font-semibold text-[#3C2317] text-right max-w-[200px] break-words">
-                                                                      {selectedBooking.customerName}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-start">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Email:</span>
-                                                                    <span className="font-semibold text-[#3C2317] text-right max-w-[200px] break-words text-sm">
-                                                                      {selectedBooking.customerEmail}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-start">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Phone:</span>
-                                                                    <span className="font-semibold text-[#3C2317] text-right">
-                                                                      {selectedBooking.customerPhone}
-                                                                    </span>
-                                                                  </div>
-                                                                </div>
-                                                              </div>
-                          
-                                                              {/* Booking Details */}
-                                                              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                                                <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                                                  <Calendar className="w-5 h-5 mr-3 text-[#D3B88C]" />
-                                                                  Booking Details
-                                                                </h4>
-                                                                <div className="space-y-4">
-                                                                  <div className="flex justify-between items-center">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Date:</span>
-                                                                    <span className="font-semibold text-[#3C2317]">
-                                                                      {formatDate(selectedBooking.bookingDate)}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-center">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Location:</span>
-                                                                    <span className="font-semibold text-[#3C2317]">
-                                                                      {selectedBooking.location}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-center">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Arrival Time:</span>
-                                                                    <span className="font-semibold text-[#3C2317]">
-                                                                      {selectedBooking.arrivalTime || "Not specified"}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-center">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Tents:</span>
-                                                                    <span className="font-semibold text-[#3C2317]">
-                                                                      {selectedBooking.numberOfTents}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-center">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Adults:</span>
-                                                                    <span className="font-semibold text-[#3C2317]">
-                                                                      {selectedBooking.adults || "Not specified"}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-center">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Children:</span>
-                                                                    <span className="font-semibold text-[#3C2317]">
-                                                                      {selectedBooking.children || 0}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-center">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Has Children:</span>
-                                                                    <span className="font-semibold text-[#3C2317]">
-                                                                      {selectedBooking.hasChildren ? "Yes" : "No"}
-                                                                    </span>
-                                                                  </div>
-                                                                </div>
-                                                              </div>
-                          
-                                                              {/* Sleeping Arrangements */}
-                                                              {selectedBooking.sleepingArrangements &&
-                                                                selectedBooking.sleepingArrangements.length > 0 && (
-                                                                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                                                    <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                                                      <Tent className="w-5 h-5 mr-3 text-[#D3B88C]" />
-                                                                      Sleeping Arrangements
-                                                                    </h4>
-                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                      {selectedBooking.sleepingArrangements.map((arrangement, index) => (
-                                                                        <div
-                                                                          key={index}
-                                                                          className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20"
-                                                                        >
-                                                                          <div className="flex items-center justify-between mb-2">
-                                                                            <span className="font-semibold text-[#3C2317] text-sm">
-                                                                              Tent #{arrangement.tentNumber}
-                                                                            </span>
-                                                                            <div className="w-3 h-3 bg-[#D3B88C] rounded-full"></div>
-                                                                          </div>
-                                                                          <div className="text-[#3C2317]/80 text-sm">
-                                                                            {arrangement.arrangement === "all-singles" &&
-                                                                              "All Single Beds (4 singles)"}
-                                                                            {arrangement.arrangement === "two-doubles" &&
-                                                                              "Two Double Beds (2 doubles)"}
-                                                                            {arrangement.arrangement === "mix" &&
-                                                                              "Mixed Arrangement (1 double + 2 singles)"}
-                                                                            {arrangement.arrangement === "double-bed" && "Double Bed (1 double)"}
-                                                                            {arrangement.arrangement === "custom" &&
-                                                                              (arrangement.customArrangement ||
-                                                                                "Custom arrangement (not specified)")}
-                                                                          </div>
-                                                                        </div>
-                                                                      ))}
-                                                                    </div>
-                                                                  </div>
-                                                                )}
-                          
-                                                              {/* Standard Add-ons */}
-                                                              {(selectedBooking.addOns.charcoal ||
-                                                                selectedBooking.addOns.firewood ||
-                                                                selectedBooking.addOns.portableToilet) && (
-                                                                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                                                  <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                                                    <Star className="w-5 h-5 mr-3 text-[#D3B88C]" />
-                                                                    Standard Add-ons
-                                                                  </h4>
-                                                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                                    {selectedBooking.addOns.charcoal && (
-                                                                      <div className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20">
-                                                                        <div className="flex items-center text-[#3C2317] mb-2">
-                                                                          <span className="font-semibold">Premium Charcoal</span>
-                                                                        </div>
-                                                                        {/* <p className="text-[#3C2317]/70 text-sm">High-quality charcoal for BBQ</p> */}
-                                                                      </div>
-                                                                    )}
-                                                                    {selectedBooking.addOns.firewood && (
-                                                                      <div className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20">
-                                                                        <div className="flex items-center text-[#3C2317] mb-2">
-                                                                          <span className="font-semibold">Premium Firewood</span>
-                                                                        </div>
-                                                                        {/* <p className="text-[#3C2317]/70 text-sm">Seasoned wood for campfire</p> */}
-                                                                      </div>
-                                                                    )}
-                                                                    {selectedBooking.addOns.portableToilet && (
-                                                                      <div className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20">
-                                                                        <div className="flex items-center text-[#3C2317] mb-2">
-                                                                          <span className="font-semibold">Portable Toilet</span>
-                                                                        </div>
-                                                                        {/* <p className="text-[#3C2317]/70 text-sm">Luxury portable facilities</p> */}
-                                                                      </div>
-                                                                    )}
-                                                                  </div>
-                                                                </div>
-                                                              )}
-                          
-                                                              {selectedBooking.customAddOnsWithDetails &&
-                                                                selectedBooking.customAddOnsWithDetails.length > 0 && (
-                                                                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                                                    <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                                                      <Star className="w-5 h-5 mr-3 text-[#84cc16]" />
-                                                                      Additional Services
-                                                                    </h4>
-                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                      {selectedBooking.customAddOnsWithDetails.map(
-                                                                        (addOn: any, index: number) => (
-                                                                          <div
-                                                                            key={index}
-                                                                            className="bg-[#84cc16]/10 p-4 rounded-lg border border-[#84cc16]/20"
-                                                                          >
-                                                                            <div className="flex items-center text-[#3C2317] mb-2">
-                                                                              <span className="font-semibold">{addOn.name}</span>
-                                                                            </div>
-                                                                            <p className="text-[#3C2317]/70 text-sm">
-                                                                              {addOn.description || "Additional custom service"}
-                                                                            </p>
-                                                                            {addOn.price && (
-                                                                              <p className="text-[#0891b2] font-semibold text-sm mt-1">
-                                                                                AED {addOn.price.toFixed(2)}
-                                                                              </p>
-                                                                            )}
-                                                                          </div>
-                                                                        ),
-                                                                      )}
-                                                                    </div>
-                                                                  </div>
-                                                                )}
-                          
-                                                              {/* Special Notes */}
-                                                              {selectedBooking.notes && (
-                                                                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                                                  <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 text-lg">
-                                                                    Special Notes
-                                                                  </h4>
-                                                                  <p className="text-[#3C2317] bg-[#E6CFA9]/40 p-4 rounded-lg leading-relaxed break-words">
-                                                                    {selectedBooking.notes}
-                                                                  </p>
-                                                                </div>
-                                                              )}
-                          
-                                                              {/* Payment Summary */}
-                                                              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
-                                                                <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
-                                                                  <DollarSign className="w-5 h-5 mr-3 text-[#D3B88C]" />
-                                                                  Payment Summary
-                                                                </h4>
-                                                                <div className="space-y-4">
-                                                                  <div className="flex justify-between items-center">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Subtotal:</span>
-                                                                    <span className="font-semibold text-[#3C2317]">
-                                                                      AED {selectedBooking.subtotal.toFixed(2)}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-center">
-                                                                    <span className="text-[#3C2317]/70 font-medium">VAT (5%):</span>
-                                                                    <span className="font-semibold text-[#3C2317]">
-                                                                      AED {selectedBooking.vat.toFixed(2)}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-center border-t border-[#D3B88C]/30 pt-4">
-                                                                    <span className="font-bold text-[#3C2317] text-xl">Total:</span>
-                                                                    <span className="font-bold text-[#0891b2] text-2xl">
-                                                                      AED {selectedBooking.total.toFixed(2)}
-                                                                    </span>
-                                                                  </div>
-                                                                  <div className="flex justify-between items-center">
-                                                                    <span className="text-[#3C2317]/70 font-medium">Status:</span>
-                                                                    <span>{getStatusBadge(selectedBooking)}</span>
-                                                                  </div>
-                                                                </div>
-                                                              </div>
-                                                            </div>
-                                                          )}
-                                                        </DialogContent>
-                                                      </Dialog>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSelectedBooking(booking)}
+                                    className="border-[#D3B88C] text-[#3C2317] bg-white h-9 px-3 hover:bg-[#D3B88C] cursor-pointer"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-gradient-to-br from-[#FBF9D9] to-[#E6CFA9] border-2 border-[#D3B88C]/50 shadow-2xl">
+                                  <DialogHeader className="border-b border-[#D3B88C]/30 pb-6">
+                                    <DialogTitle className="text-[#3C2317] text-2xl font-bold flex items-center">
+                                      <Tent className="w-7 h-7 mr-3 text-[#D3B88C]" />
+                                      Order Details - #{selectedBooking?._id.slice(-6).toUpperCase()}
+                                    </DialogTitle>
+                                  </DialogHeader>
+                                  {selectedBooking && (
+                                    <div className="space-y-8 pt-6">
+                                      {/* Customer Information */}
+                                      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
+                                        <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
+                                          <Users className="w-5 h-5 mr-3 text-[#D3B88C]" />
+                                          Customer Information
+                                        </h4>
+                                        <div className="space-y-4">
+                                          <div className="flex justify-between items-start">
+                                            <span className="text-[#3C2317]/70 font-medium">Name:</span>
+                                            <span className="font-semibold text-[#3C2317] text-right max-w-[200px] break-words">
+                                              {selectedBooking.customerName}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-start">
+                                            <span className="text-[#3C2317]/70 font-medium">Email:</span>
+                                            <span className="font-semibold text-[#3C2317] text-right max-w-[200px] break-words text-sm">
+                                              {selectedBooking.customerEmail}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-start">
+                                            <span className="text-[#3C2317]/70 font-medium">Phone:</span>
+                                            <span className="font-semibold text-[#3C2317] text-right">
+                                              {selectedBooking.customerPhone}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Booking Details */}
+                                      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
+                                        <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
+                                          <Calendar className="w-5 h-5 mr-3 text-[#D3B88C]" />
+                                          Booking Details
+                                        </h4>
+                                        <div className="space-y-4">
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[#3C2317]/70 font-medium">Date:</span>
+                                            <span className="font-semibold text-[#3C2317]">
+                                              {formatDate(selectedBooking.bookingDate)}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[#3C2317]/70 font-medium">Location:</span>
+                                            <span className="font-semibold text-[#3C2317]">
+                                              {selectedBooking.location}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[#3C2317]/70 font-medium">Arrival Time:</span>
+                                            <span className="font-semibold text-[#3C2317]">
+                                              {selectedBooking.arrivalTime || "Not specified"}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[#3C2317]/70 font-medium">Tents:</span>
+                                            <span className="font-semibold text-[#3C2317]">
+                                              {selectedBooking.numberOfTents}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[#3C2317]/70 font-medium">Adults:</span>
+                                            <span className="font-semibold text-[#3C2317]">
+                                              {selectedBooking.adults || "Not specified"}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[#3C2317]/70 font-medium">Children:</span>
+                                            <span className="font-semibold text-[#3C2317]">
+                                              {selectedBooking.children || 0}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[#3C2317]/70 font-medium">Has Children:</span>
+                                            <span className="font-semibold text-[#3C2317]">
+                                              {selectedBooking.hasChildren ? "Yes" : "No"}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Sleeping Arrangements */}
+                                      {selectedBooking.sleepingArrangements &&
+                                        selectedBooking.sleepingArrangements.length > 0 && (
+                                          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
+                                            <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
+                                              <Tent className="w-5 h-5 mr-3 text-[#D3B88C]" />
+                                              Sleeping Arrangements
+                                            </h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                              {selectedBooking.sleepingArrangements.map((arrangement, index) => (
+                                                <div
+                                                  key={index}
+                                                  className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20"
+                                                >
+                                                  <div className="flex items-center justify-between mb-2">
+                                                    <span className="font-semibold text-[#3C2317] text-sm">
+                                                      Tent #{arrangement.tentNumber}
+                                                    </span>
+                                                    <div className="w-3 h-3 bg-[#D3B88C] rounded-full"></div>
+                                                  </div>
+                                                  <div className="text-[#3C2317]/80 text-sm">
+                                                    {arrangement.arrangement === "all-singles" &&
+                                                      "All Single Beds (4 singles)"}
+                                                    {arrangement.arrangement === "two-doubles" &&
+                                                      "Two Double Beds (2 doubles)"}
+                                                    {arrangement.arrangement === "mix" &&
+                                                      "Mixed Arrangement (1 double + 2 singles)"}
+                                                    {arrangement.arrangement === "double-bed" &&
+                                                      "Double Bed (1 double)"}
+                                                    {arrangement.arrangement === "custom" &&
+                                                      (arrangement.customArrangement ||
+                                                        "Custom arrangement (not specified)")}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                      {/* Standard Add-ons */}
+                                      {(selectedBooking.addOns.charcoal ||
+                                        selectedBooking.addOns.firewood ||
+                                        selectedBooking.addOns.portableToilet) && (
+                                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
+                                          <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
+                                            <Star className="w-5 h-5 mr-3 text-[#D3B88C]" />
+                                            Standard Add-ons
+                                          </h4>
+                                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            {selectedBooking.addOns.charcoal && (
+                                              <div className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20">
+                                                <div className="flex items-center text-[#3C2317] mb-2">
+                                                  <span className="font-semibold">Premium Charcoal</span>
+                                                </div>
+                                                {/* <p className="text-[#3C2317]/70 text-sm">High-quality charcoal for BBQ</p> */}
+                                              </div>
+                                            )}
+                                            {selectedBooking.addOns.firewood && (
+                                              <div className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20">
+                                                <div className="flex items-center text-[#3C2317] mb-2">
+                                                  <span className="font-semibold">Premium Firewood</span>
+                                                </div>
+                                                {/* <p className="text-[#3C2317]/70 text-sm">Seasoned wood for campfire</p> */}
+                                              </div>
+                                            )}
+                                            {selectedBooking.addOns.portableToilet && (
+                                              <div className="bg-[#E6CFA9]/30 p-4 rounded-lg border border-[#D3B88C]/20">
+                                                <div className="flex items-center text-[#3C2317] mb-2">
+                                                  <span className="font-semibold">Portable Toilet</span>
+                                                </div>
+                                                {/* <p className="text-[#3C2317]/70 text-sm">Luxury portable facilities</p> */}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {selectedBooking.customAddOnsWithDetails &&
+                                        selectedBooking.customAddOnsWithDetails.length > 0 && (
+                                          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
+                                            <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
+                                              <Star className="w-5 h-5 mr-3 text-[#84cc16]" />
+                                              Additional Services
+                                            </h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                              {selectedBooking.customAddOnsWithDetails.map(
+                                                (addOn: any, index: number) => (
+                                                  <div
+                                                    key={index}
+                                                    className="bg-[#84cc16]/10 p-4 rounded-lg border border-[#84cc16]/20"
+                                                  >
+                                                    <div className="flex items-center text-[#3C2317] mb-2">
+                                                      <span className="font-semibold">{addOn.name}</span>
+                                                    </div>
+                                                    <p className="text-[#3C2317]/70 text-sm">
+                                                      {addOn.description || "Additional custom service"}
+                                                    </p>
+                                                    {addOn.price && (
+                                                      <p className="text-[#0891b2] font-semibold text-sm mt-1">
+                                                        AED {addOn.price.toFixed(2)}
+                                                      </p>
+                                                    )}
+                                                  </div>
+                                                ),
+                                              )}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                      {/* Special Notes */}
+                                      {selectedBooking.notes && (
+                                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
+                                          <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 text-lg">
+                                            Special Notes
+                                          </h4>
+                                          <p className="text-[#3C2317] bg-[#E6CFA9]/40 p-4 rounded-lg leading-relaxed break-words">
+                                            {selectedBooking.notes}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {/* Payment Summary */}
+                                      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-[#D3B88C]/30 shadow-sm">
+                                        <h4 className="font-bold mb-4 text-[#3C2317] border-b border-[#D3B88C]/30 pb-3 flex items-center text-lg">
+                                          <DollarSign className="w-5 h-5 mr-3 text-[#D3B88C]" />
+                                          Payment Summary
+                                        </h4>
+                                        <div className="space-y-4">
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[#3C2317]/70 font-medium">Subtotal:</span>
+                                            <span className="font-semibold text-[#3C2317]">
+                                              AED {selectedBooking.subtotal.toFixed(2)}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[#3C2317]/70 font-medium">VAT (5%):</span>
+                                            <span className="font-semibold text-[#3C2317]">
+                                              AED {selectedBooking.vat.toFixed(2)}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-center border-t border-[#D3B88C]/30 pt-4">
+                                            <span className="font-bold text-[#3C2317] text-xl">Total:</span>
+                                            <span className="font-bold text-[#0891b2] text-2xl">
+                                              AED {selectedBooking.total.toFixed(2)}
+                                            </span>
+                                          </div>
+                                          <div className="flex justify-between items-center">
+                                            <span className="text-[#3C2317]/70 font-medium">Status:</span>
+                                            <span>{getStatusBadge(selectedBooking)}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </DialogContent>
+                              </Dialog>
 
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>

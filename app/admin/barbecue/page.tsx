@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +20,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import InvoiceDownloadButton from "@/components/invoice-download-button"
+import { OrderFilters } from "@/components/order-filters"
+import { OrderSummaryStats } from "@/components/order-summary-stats"
 
 type BarbecueBooking = {
   _id: string
@@ -43,23 +44,48 @@ export default function BarbecueOrdersPage() {
   const [bookings, setBookings] = useState<BarbecueBooking[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
   const [selectedBooking, setSelectedBooking] = useState<BarbecueBooking | null>(null)
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalBookings, setTotalBookings] = useState(0)
+  const [isManagementMode, setIsManagementMode] = useState(false)
+  const itemsPerPage = 7
+
+  const [managementStats, setManagementStats] = useState({
+    totalOrders: 0,
+    totalRevenue: 0,
+    totalResources: 0,
+    averageOrderValue: 0,
+  })
+
   const [stats, setStats] = useState({
     totalBookings: 0,
     paidBookings: 0,
     totalRevenue: 0,
     pendingBookings: 0,
   })
-  const itemsPerPage = 7
 
   useEffect(() => {
     fetchBookings()
     fetchStats()
-  }, [searchTerm, currentPage])
+  }, [searchTerm, currentPage, startDate, endDate])
+
+  const calculateManagementStats = (filteredBookings: BarbecueBooking[]) => {
+    const totalOrders = filteredBookings.length
+    const totalRevenue = filteredBookings.reduce((sum, b) => sum + b.total, 0)
+    const totalResources = filteredBookings.reduce((sum, b) => sum + b.groupSize, 0)
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+
+    setManagementStats({
+      totalOrders,
+      totalRevenue,
+      totalResources,
+      averageOrderValue,
+    })
+  }
 
   const formatDate = (date: Date | string) =>
     new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
@@ -89,12 +115,15 @@ export default function BarbecueOrdersPage() {
       if (searchTerm) params.append("search", searchTerm)
       params.append("page", currentPage.toString())
       params.append("limit", itemsPerPage.toString())
+      if (startDate) params.append("startDate", startDate)
+      if (endDate) params.append("endDate", endDate)
 
       const response = await fetch(`/api/barbecue/bookings?${params}`)
       const data = await response.json()
       setBookings(data.bookings || [])
       setTotalPages(data.pagination?.pages || 1)
       setTotalBookings(data.pagination?.total || 0)
+      calculateManagementStats(data.bookings || [])
     } catch (e) {
       toast.error("Failed to fetch barbecue bookings")
     } finally {
@@ -174,25 +203,27 @@ export default function BarbecueOrdersPage() {
           </Card>
         </div>
 
-        <Card className="bg-white/90 backdrop-blur-sm border-[var(--color-border)]/50 shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="text-[var(--color-foreground)] text-xl font-semibold">Barbecue Bookings</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex-1">
-                <div className="relative">
-                  <Input
-                    placeholder="Search by name, email, or phone..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-4 h-10 border-[var(--color-border)] focus:border-[var(--color-foreground)] bg-white/70 text-base"
-                  />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <OrderFilters
+          onSearchChange={setSearchTerm}
+          onDateRangeChange={(start, end) => {
+            setStartDate(start)
+            setEndDate(end)
+            setCurrentPage(1)
+          }}
+          onManagementToggle={setIsManagementMode}
+          isManagementMode={isManagementMode}
+          searchTerm={searchTerm}
+          startDate={startDate}
+          endDate={endDate}
+        />
+
+        <OrderSummaryStats
+          totalOrders={managementStats.totalOrders}
+          totalRevenue={managementStats.totalRevenue}
+          totalResources={managementStats.totalResources}
+          averageOrderValue={managementStats.averageOrderValue}
+          isManagementMode={isManagementMode}
+        />
 
         <Card className="bg-white/95 border-[var(--color-border)]/60 shadow-xl">
           <CardContent className="p-0">

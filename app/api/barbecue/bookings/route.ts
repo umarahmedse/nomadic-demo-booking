@@ -108,6 +108,8 @@ export async function GET(request: NextRequest) {
     const page = Number.parseInt(searchParams.get("page") || "1")
     const limit = Number.parseInt(searchParams.get("limit") || "10")
     const search = searchParams.get("search") || ""
+    const startDate = searchParams.get("startDate")
+    const endDate = searchParams.get("endDate")
     const skip = (page - 1) * limit
 
     const db = await getDatabase()
@@ -119,6 +121,20 @@ export async function GET(request: NextRequest) {
         { customerEmail: { $regex: search, $options: "i" } },
         { customerPhone: { $regex: search, $options: "i" } },
       ]
+    }
+
+    if (startDate || endDate) {
+      filter.bookingDate = {}
+      if (startDate) {
+        const start = new Date(startDate)
+        start.setHours(0, 0, 0, 0)
+        filter.bookingDate.$gte = start
+      }
+      if (endDate) {
+        const end = new Date(endDate)
+        end.setHours(23, 59, 59, 999)
+        filter.bookingDate.$lte = end
+      }
     }
 
     const [bookings, total] = await Promise.all([

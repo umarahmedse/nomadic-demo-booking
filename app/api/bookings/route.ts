@@ -240,6 +240,8 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || ""
     const location = searchParams.get("location") || ""
     const isPaid = searchParams.get("isPaid")
+    const startDate = searchParams.get("startDate")
+    const endDate = searchParams.get("endDate")
 
     const db = await getDatabase()
 
@@ -263,6 +265,20 @@ export async function GET(request: NextRequest) {
     } else {
       // Default to only paid bookings for orders page
       filter.isPaid = true
+    }
+
+    if (startDate || endDate) {
+      filter.bookingDate = {}
+      if (startDate) {
+        const start = new Date(startDate)
+        start.setHours(0, 0, 0, 0)
+        filter.bookingDate.$gte = start
+      }
+      if (endDate) {
+        const end = new Date(endDate)
+        end.setHours(23, 59, 59, 999)
+        filter.bookingDate.$lte = end
+      }
     }
 
     const skip = (page - 1) * limit
