@@ -245,235 +245,6 @@ export default function AdminSettingsPage() {
 
         <div className="space-y-8">
           {/* Tent Pricing */}
-          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl">
-            <CardHeader className="border-b border-[#D3B88C]/50">
-              <CardTitle className="text-[#3C2317] text-lg font-semibold flex items-center">
-                <Tent className="w-5 h-5 mr-2 text-[#D3B88C]" />
-                Tent Pricing Configuration
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 p-6">
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="space-y-3">
-                  <Label htmlFor="weekdayPrice" className="text-[#3C2317] font-medium flex items-center">
-                    Weekday Price (AED)
-                    <Badge variant="outline" className="ml-2 text-xs border-[#D3B88C] text-[#3C2317]">
-                      Mon-Thu
-                    </Badge>
-                  </Label>
-                  <Input
-                    id="weekdayPrice"
-                    type="number"
-                    step="0.1"
-                    value={settings?.tentPrices?.weekday || 1297.8}
-                    onChange={(e) => updateSettings("tentPrices.weekday", Number(e.target.value))}
-                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
-                  />
-                  <p className="text-sm text-[#3C2317]/60">Single tent price for Monday to Thursday</p>
-                </div>
-
-                <div className="space-y-3">
-                  <Label htmlFor="weekendPrice" className="text-[#3C2317] font-medium flex items-center">
-                    Weekend Price (AED)
-                    <Badge variant="outline" className="ml-2 text-xs border-[#D3B88C] text-[#3C2317]">
-                      Fri-Sun
-                    </Badge>
-                  </Label>
-                  <Input
-                    id="weekendPrice"
-                    type="number"
-                    step="0.1"
-                    value={settings?.tentPrices?.weekend || 1497.8}
-                    onChange={(e) => updateSettings("tentPrices.weekend", Number(e.target.value))}
-                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
-                  />
-                  <p className="text-sm text-[#3C2317]/60">Single tent price for Friday to Sunday</p>
-                </div>
-
-                <div className="space-y-3">
-                  <Label htmlFor="multipleTents" className="text-[#3C2317] font-medium flex items-center">
-                    Multiple Tents Price (AED each)
-                    <Badge variant="outline" className="ml-2 text-xs border-[#D3B88C] text-[#3C2317]">
-                      Bulk Discount
-                    </Badge>
-                  </Label>
-                  <Input
-                    id="multipleTents"
-                    type="number"
-                    step="0.1"
-                    value={settings?.tentPrices?.multipleTents || 1297.8}
-                    onChange={(e) => updateSettings("tentPrices.multipleTents", Number(e.target.value))}
-                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
-                  />
-                  <p className="text-sm text-[#3C2317]/60">Discounted price per tent when booking 2 or more tents</p>
-                </div>
-              </div>
-
-              <div className="bg-[#E6CFA9]/30 p-4 rounded-lg">
-                <h4 className="font-medium text-[#3C2317] mb-2">Pricing Rules</h4>
-                <ul className="text-sm text-[#3C2317]/60 space-y-1">
-                  <li>• Weekdays (Mon-Thu): {settings?.tentPrices?.weekday || 1297.8} AED + VAT per tent</li>
-                  <li>• Weekends (Fri-Sun): {settings?.tentPrices?.weekend || 1497.8} AED + VAT per tent</li>
-                  <li>• Multiple tents (2+): {settings?.tentPrices?.multipleTents || 1297.8} AED each + VAT</li>
-                  <li>• Maximum 10 tents per day (split across bookings)</li>
-                  <li>• Each tent accommodates up to 4 people</li>
-                </ul>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Standard Add-ons */}
-          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl">
-            <CardHeader className="border-b border-[#D3B88C]/50">
-              <CardTitle className="text-[#3C2317] text-lg font-semibold flex items-center">
-                <DollarSign className="w-5 h-5 mr-2 text-[#D3B88C]" />
-                Standard Add-on Pricing
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 p-6">
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="space-y-3">
-                  <Label htmlFor="charcoal" className="text-[#3C2317] font-medium">
-                    Charcoal (AED)
-                  </Label>
-                  <Input
-                    id="charcoal"
-                    type="number"
-                    value={settings?.addOnPrices?.charcoal || 60}
-                    onChange={(e) => updateSettings("addOnPrices.charcoal", Number(e.target.value))}
-                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
-                  />
-                  <p className="text-sm text-[#3C2317]/60">Premium charcoal for BBQ</p>
-                </div>
-
-                <div className="space-y-3">
-                  <Label htmlFor="firewood" className="text-[#3C2317] font-medium">
-                    Firewood (AED)
-                  </Label>
-                  <Input
-                    id="firewood"
-                    type="number"
-                    value={settings?.addOnPrices?.firewood || 75}
-                    onChange={(e) => updateSettings("addOnPrices.firewood", Number(e.target.value))}
-                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
-                  />
-                  <p className="text-sm text-[#3C2317]/60">Dry firewood for campfire</p>
-                </div>
-
-                <div className="space-y-3">
-                  <Label htmlFor="portableToilet" className="text-[#3C2317] font-medium">
-                    Portable Toilet (AED)
-                  </Label>
-                  <Input
-                    id="portableToilet"
-                    type="number"
-                    value={settings?.addOnPrices?.portableToilet || 200}
-                    onChange={(e) => updateSettings("addOnPrices.portableToilet", Number(e.target.value))}
-                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
-                  />
-                  <p className="text-sm text-[#3C2317]/60">Clean portable toilet facility (FREE with children)</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Custom Add-ons */}
-          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl">
-            <CardHeader className="border-b border-[#D3B88C]/50">
-              <CardTitle className="text-[#3C2317] text-lg font-semibold flex items-center">
-                <Plus className="w-5 h-5 mr-2 text-[#D3B88C]" />
-                Custom Add-ons Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6 p-6">
-              {/* Add New Custom Add-on */}
-              <div className="border border-[#D3B88C]/50 rounded-lg p-4 bg-[#E6CFA9]/20">
-                <h4 className="font-medium text-[#3C2317] mb-4">Add New Custom Add-on</h4>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="newAddOnName" className="text-[#3C2317]">
-                      Name
-                    </Label>
-                    <Input
-                      id="newAddOnName"
-                      placeholder="e.g., Extra Blankets"
-                      value={newAddOn.name}
-                      onChange={(e) => setNewAddOn({ ...newAddOn, name: e.target.value })}
-                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newAddOnPrice" className="text-[#3C2317]">
-                      Price (AED)
-                    </Label>
-                    <Input
-                      id="newAddOnPrice"
-                      type="number"
-                      placeholder="0"
-                      value={newAddOn.price}
-                      onChange={(e) => setNewAddOn({ ...newAddOn, price: Number(e.target.value) })}
-                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newAddOnDescription" className="text-[#3C2317]">
-                      Description
-                    </Label>
-                    <Input
-                      id="newAddOnDescription"
-                      placeholder="Brief description"
-                      value={newAddOn.description}
-                      onChange={(e) => setNewAddOn({ ...newAddOn, description: e.target.value })}
-                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
-                    />
-                  </div>
-                </div>
-                <Button
-                  onClick={addCustomAddOn}
-                  className="mt-4 bg-gradient-to-r from-[#84cc16] to-[#65a30d] hover:from-[#84cc16]/90 hover:to-[#65a30d]/90 text-white"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Custom Add-on
-                </Button>
-              </div>
-
-              {/* Existing Custom Add-ons */}
-              {settings?.customAddOns && settings.customAddOns.length > 0 && (
-                <div className="space-y-4">
-                  <h4 className="font-medium text-[#3C2317] text-sm">Existing Custom Add-ons</h4>
-                  <div className="grid gap-3">
-                    {settings.customAddOns.map((addon: any, index: number) => (
-                      <div
-                        key={addon.id}
-                        className={`flex items-center justify-between p-3 border border-[#D3B88C]/50 rounded-lg transition-colors hover:bg-[#E6CFA9]/20 ${
-                          index % 2 === 0 ? "bg-white/30" : "bg-[#FBF9D9]/30"
-                        }`}
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <h5 className="font-medium text-[#3C2317] text-sm">{addon.name}</h5>
-                            <Badge variant="outline" className="border-[#D3B88C] text-[#3C2317] text-xs">
-                              AED {addon.price}
-                            </Badge>
-                          </div>
-                          {addon.description && <p className="text-xs text-[#3C2317]/60 mt-1">{addon.description}</p>}
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeCustomAddOn(addon.id)}
-                          className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 cursor-pointer transition-all duration-200 h-8 px-2"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Special Pricing for Holidays/Events */}
           <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl">
             <CardHeader className="border-b border-[#D3B88C]/50">
@@ -886,6 +657,236 @@ export default function AdminSettingsPage() {
               </div>
             </CardContent>
           </Card>
+          {/* <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl">
+            <CardHeader className="border-b border-[#D3B88C]/50">
+              <CardTitle className="text-[#3C2317] text-lg font-semibold flex items-center">
+                <Tent className="w-5 h-5 mr-2 text-[#D3B88C]" />
+                Tent Pricing Configuration
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="weekdayPrice" className="text-[#3C2317] font-medium flex items-center">
+                    Weekday Price (AED)
+                    <Badge variant="outline" className="ml-2 text-xs border-[#D3B88C] text-[#3C2317]">
+                      Mon-Thu
+                    </Badge>
+                  </Label>
+                  <Input
+                    id="weekdayPrice"
+                    type="number"
+                    step="0.1"
+                    value={settings?.tentPrices?.weekday || 1297.8}
+                    onChange={(e) => updateSettings("tentPrices.weekday", Number(e.target.value))}
+                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
+                  />
+                  <p className="text-sm text-[#3C2317]/60">Single tent price for Monday to Thursday</p>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="weekendPrice" className="text-[#3C2317] font-medium flex items-center">
+                    Weekend Price (AED)
+                    <Badge variant="outline" className="ml-2 text-xs border-[#D3B88C] text-[#3C2317]">
+                      Fri-Sun
+                    </Badge>
+                  </Label>
+                  <Input
+                    id="weekendPrice"
+                    type="number"
+                    step="0.1"
+                    value={settings?.tentPrices?.weekend || 1497.8}
+                    onChange={(e) => updateSettings("tentPrices.weekend", Number(e.target.value))}
+                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
+                  />
+                  <p className="text-sm text-[#3C2317]/60">Single tent price for Friday to Sunday</p>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="multipleTents" className="text-[#3C2317] font-medium flex items-center">
+                    Multiple Tents Price (AED each)
+                    <Badge variant="outline" className="ml-2 text-xs border-[#D3B88C] text-[#3C2317]">
+                      Bulk Discount
+                    </Badge>
+                  </Label>
+                  <Input
+                    id="multipleTents"
+                    type="number"
+                    step="0.1"
+                    value={settings?.tentPrices?.multipleTents || 1297.8}
+                    onChange={(e) => updateSettings("tentPrices.multipleTents", Number(e.target.value))}
+                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
+                  />
+                  <p className="text-sm text-[#3C2317]/60">Discounted price per tent when booking 2 or more tents</p>
+                </div>
+              </div>
+
+              <div className="bg-[#E6CFA9]/30 p-4 rounded-lg">
+                <h4 className="font-medium text-[#3C2317] mb-2">Pricing Rules</h4>
+                <ul className="text-sm text-[#3C2317]/60 space-y-1">
+                  <li>• Weekdays (Mon-Thu): {settings?.tentPrices?.weekday || 1297.8} AED + VAT per tent</li>
+                  <li>• Weekends (Fri-Sun): {settings?.tentPrices?.weekend || 1497.8} AED + VAT per tent</li>
+                  <li>• Multiple tents (2+): {settings?.tentPrices?.multipleTents || 1297.8} AED each + VAT</li>
+                  <li>• Maximum 10 tents per day (split across bookings)</li>
+                  <li>• Each tent accommodates up to 4 people</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card> */}
+
+          {/* Standard Add-ons */}
+          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl">
+            <CardHeader className="border-b border-[#D3B88C]/50">
+              <CardTitle className="text-[#3C2317] text-lg font-semibold flex items-center">
+                <DollarSign className="w-5 h-5 mr-2 text-[#D3B88C]" />
+                Standard Add-on Pricing
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="charcoal" className="text-[#3C2317] font-medium">
+                    Charcoal (AED)
+                  </Label>
+                  <Input
+                    id="charcoal"
+                    type="number"
+                    value={settings?.addOnPrices?.charcoal || 60}
+                    onChange={(e) => updateSettings("addOnPrices.charcoal", Number(e.target.value))}
+                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
+                  />
+                  <p className="text-sm text-[#3C2317]/60">Premium charcoal for BBQ</p>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="firewood" className="text-[#3C2317] font-medium">
+                    Firewood (AED)
+                  </Label>
+                  <Input
+                    id="firewood"
+                    type="number"
+                    value={settings?.addOnPrices?.firewood || 75}
+                    onChange={(e) => updateSettings("addOnPrices.firewood", Number(e.target.value))}
+                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
+                  />
+                  <p className="text-sm text-[#3C2317]/60">Dry firewood for campfire</p>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="portableToilet" className="text-[#3C2317] font-medium">
+                    Portable Toilet (AED)
+                  </Label>
+                  <Input
+                    id="portableToilet"
+                    type="number"
+                    value={settings?.addOnPrices?.portableToilet || 200}
+                    onChange={(e) => updateSettings("addOnPrices.portableToilet", Number(e.target.value))}
+                    className="border-[#D3B88C] focus:border-[#3C2317] focus:ring-[#3C2317]/20 bg-white/50"
+                  />
+                  <p className="text-sm text-[#3C2317]/60">Clean portable toilet facility (FREE with children)</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Custom Add-ons */}
+          <Card className="bg-[#FBF9D9]/80 backdrop-blur-sm border-[#D3B88C]/50 shadow-xl">
+            <CardHeader className="border-b border-[#D3B88C]/50">
+              <CardTitle className="text-[#3C2317] text-lg font-semibold flex items-center">
+                <Plus className="w-5 h-5 mr-2 text-[#D3B88C]" />
+                Custom Add-ons Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Add New Custom Add-on */}
+              <div className="border border-[#D3B88C]/50 rounded-lg p-4 bg-[#E6CFA9]/20">
+                <h4 className="font-medium text-[#3C2317] mb-4">Add New Custom Add-on</h4>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="newAddOnName" className="text-[#3C2317]">
+                      Name
+                    </Label>
+                    <Input
+                      id="newAddOnName"
+                      placeholder="e.g., Extra Blankets"
+                      value={newAddOn.name}
+                      onChange={(e) => setNewAddOn({ ...newAddOn, name: e.target.value })}
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="newAddOnPrice" className="text-[#3C2317]">
+                      Price (AED)
+                    </Label>
+                    <Input
+                      id="newAddOnPrice"
+                      type="number"
+                      placeholder="0"
+                      value={newAddOn.price}
+                      onChange={(e) => setNewAddOn({ ...newAddOn, price: Number(e.target.value) })}
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="newAddOnDescription" className="text-[#3C2317]">
+                      Description
+                    </Label>
+                    <Input
+                      id="newAddOnDescription"
+                      placeholder="Brief description"
+                      value={newAddOn.description}
+                      onChange={(e) => setNewAddOn({ ...newAddOn, description: e.target.value })}
+                      className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                    />
+                  </div>
+                </div>
+                <Button
+                  onClick={addCustomAddOn}
+                  className="mt-4 bg-gradient-to-r from-[#84cc16] to-[#65a30d] hover:from-[#84cc16]/90 hover:to-[#65a30d]/90 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Custom Add-on
+                </Button>
+              </div>
+
+              {/* Existing Custom Add-ons */}
+              {settings?.customAddOns && settings.customAddOns.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-[#3C2317] text-sm">Existing Custom Add-ons</h4>
+                  <div className="grid gap-3">
+                    {settings.customAddOns.map((addon: any, index: number) => (
+                      <div
+                        key={addon.id}
+                        className={`flex items-center justify-between p-3 border border-[#D3B88C]/50 rounded-lg transition-colors hover:bg-[#E6CFA9]/20 ${
+                          index % 2 === 0 ? "bg-white/30" : "bg-[#FBF9D9]/30"
+                        }`}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3">
+                            <h5 className="font-medium text-[#3C2317] text-sm">{addon.name}</h5>
+                            <Badge variant="outline" className="border-[#D3B88C] text-[#3C2317] text-xs">
+                              AED {addon.price}
+                            </Badge>
+                          </div>
+                          {addon.description && <p className="text-xs text-[#3C2317]/60 mt-1">{addon.description}</p>}
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeCustomAddOn(addon.id)}
+                          className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 cursor-pointer transition-all duration-200 h-8 px-2"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          
 
           {/* Save Button */}
           <div className="flex justify-end space-x-4">
