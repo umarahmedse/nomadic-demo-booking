@@ -103,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const bbqNav = [
     {
       href: "/admin/barbecue",
-      label: "Barbecue Bookings",
+      label: "Barbecue Orders",
       icon: ShoppingCart,
       description: "Manage Desert BBQ",
     },
