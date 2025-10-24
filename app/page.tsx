@@ -2738,7 +2738,7 @@ export default function BookingPage() {
                         Wadi surcharge (1 tent booking)
                       </span>
                       <span className="font-semibold text-[11px] sm:text-xs text-[#3C2317]">
-                        AED 750 (includes AED 500 additional for 1 tent)
+                        Roam Further additional charge for long distance bookings’ - 500 AED
                       </span>
                     </div>
 
