@@ -1728,7 +1728,7 @@ export default function BookingPage() {
                       {dateConstraints.maxBookingsReached && (
                         <div className="p-2 sm:p-3 bg-red-50 border border-red-200 rounded-lg">
                           <p className="text-red-800 text-xs sm:text-sm">
-                            Maximum 3 bookings per day reached. Please select a
+                            Bookings not available on selected date. Please select a
                             different date.
                           </p>
                         </div>
