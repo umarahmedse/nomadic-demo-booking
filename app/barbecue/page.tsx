@@ -1012,97 +1012,119 @@ export default function BarbecueBookingPage() {
                     </div>
 
                     {formData.bookingDate && dateConstraints?.blocked && (
-                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-xs sm:text-sm text-red-700">
-                          {dateConstraints.blockedReason ||
-                            "This date is unavailable (blocked by admin). Please choose another date."}
+                      <div className="mt-4 p-6 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-xl text-center">
+                        <div className="text-5xl mb-3">😔</div>
+                        <h3 className="text-lg font-bold text-red-800 mb-2">Sorry, We're Unavailable</h3>
+                        <p className="text-sm text-red-700 mb-4">Bookings are not available on the selected date.</p>
+                        <p className="text-sm font-semibold text-red-800 bg-white/60 p-3 rounded-lg">
+                          {dateConstraints.blockedReason || "This date is unavailable. Please choose another date."}
                         </p>
                       </div>
                     )}
 
-                    {formData.bookingDate && !dateConstraints?.blocked && dateConstraints.booked && (
-                      <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-xs sm:text-sm text-red-700">
-                          This date is already booked. Please select another date.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card className="border-[#D3B88C]/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-[#FBF9D9]/80 backdrop-blur-sm !pt-0">
-                  <CardHeader className="bg-gradient-to-r from-[#D3B88C]/20 to-[#E6CFA9]/20 border-b border-[#D3B88C]/50 h-10 sm:h-12 py-2 sm:py-3 px-3 sm:px-6">
-                    <CardTitle className="text-[#3C2317] text-sm sm:text-base lg:text-lg">Group Size & Time</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 !pt-0">
-                    <div className="space-y-2">
-                      <Label className="text-[#3C2317] font-semibold text-xs sm:text-sm">Select Group Size *</Label>
-                      <div className="grid grid-cols-3 gap-3">
-                        {[10, 15, 20].map((size) => (
-                          <Button
-                            key={size}
-                            type="button"
-                            variant={formData.groupSize === size ? "default" : "outline"}
-                            onClick={() =>
-                              setFormData((p) => ({
-                                ...p,
-                                groupSize: size as BarbecueGroupSize,
-                              }))
-                            }
-                            className={cn(
-                              "rounded-lg cursor-pointer transition-all duration-300",
-                              formData.groupSize === size
-                                ? "bg-[#3C2317] text-[#FBF9D9] hover:bg-[#3C2317]/90"
-                                : "border-2 border-[#D3B88C] hover:border-[#3C2317] hover:bg-[#D3B88C]/20",
-                            )}
-                          >
-                            Up to {size}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[#3C2317] font-semibold text-xs sm:text-sm">Arrival Time</Label>
+                    {formData.bookingDate && !dateConstraints?.blocked && (
                       <div className="mt-2">
-                        <Button
-                          type="button"
-                          variant="default"
-                          disabled
-                          className="bg-[#3C2317] text-[#FBF9D9] rounded-xl w-full sm:w-auto"
-                        >
-                          6:00 PM (Fixed)
-                        </Button>
-                      </div>
-                      <div className="mt-2 p-2 bg-[#E6CFA9]/40 border border-[#D3B88C]/40 rounded-lg">
-                        <p className="text-[#3C2317] text-md">
-                          <strong>Note:</strong> Arrival time is fixed at 6:00 PM. One BBQ setup per day for
-                          exclusivity. <br />
-                          For groups of more than 20 people, please <strong>contact us</strong>.
+                        <p className="text-xs text-green-700 flex items-center space-x-2">
+                          <Check className="w-3 h-3 flex-shrink-0 text-green-600" />
+                          <span>This date is available for booking</span>
                         </p>
                       </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
 
-                <div className="flex justify-between sm:justify-between sm:gap-5 pt-2 sm:pt-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowBookingFlow(false)}
-                    className="border-none text-[#3C2317] cursor-pointer hover:bg-[#3C2317] hover:text-[#FBF9D9]"
-                  >
-                    Back
-                  </Button>
+                {!dateConstraints?.blocked && (
+                  <>
+                    <Card className="border-[#D3B88C]/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-[#FBF9D9]/80 backdrop-blur-sm !pt-0">
+                      <CardHeader className="bg-gradient-to-r from-[#D3B88C]/20 to-[#E6CFA9]/20 border-b border-[#D3B88C]/50 h-10 sm:h-12 py-2 sm:py-3 px-3 sm:px-6">
+                        <CardTitle className="text-[#3C2317] text-sm sm:text-base lg:text-lg">
+                          Group Size & Time
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 !pt-0">
+                        <div className="space-y-2">
+                          <Label className="text-[#3C2317] font-semibold text-xs sm:text-sm">Select Group Size *</Label>
+                          <div className="grid grid-cols-3 gap-3">
+                            {[10, 15, 20].map((size) => (
+                              <Button
+                                key={size}
+                                type="button"
+                                variant={formData.groupSize === size ? "default" : "outline"}
+                                onClick={() =>
+                                  setFormData((p) => ({
+                                    ...p,
+                                    groupSize: size as BarbecueGroupSize,
+                                  }))
+                                }
+                                className={cn(
+                                  "rounded-lg cursor-pointer transition-all duration-300",
+                                  formData.groupSize === size
+                                    ? "bg-[#3C2317] text-[#FBF9D9] hover:bg-[#3C2317]/90"
+                                    : "border-2 border-[#D3B88C] hover:border-[#3C2317] hover:bg-[#D3B88C]/20",
+                                )}
+                              >
+                                Up to {size}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
 
-                  <Button
-                    type="button"
-                    onClick={() => handleStepChange(2)}
-                    className="bg-[#3C2317] text-[#FBF9D9] hover:bg-[#5D4037] cursor-pointer"
-                  >
-                    Next
-                  </Button>
-                </div>
+                        <div className="space-y-2">
+                          <Label className="text-[#3C2317] font-semibold text-xs sm:text-sm">Arrival Time</Label>
+                          <div className="mt-2">
+                            <Button
+                              type="button"
+                              variant="default"
+                              disabled
+                              className="bg-[#3C2317] text-[#FBF9D9] rounded-xl w-full sm:w-auto"
+                            >
+                              6:00 PM (Fixed)
+                            </Button>
+                          </div>
+                          <div className="mt-2 p-2 bg-[#E6CFA9]/40 border border-[#D3B88C]/40 rounded-lg">
+                            <p className="text-[#3C2317] text-md">
+                              <strong>Note:</strong> Arrival time is fixed at 6:00 PM. One BBQ setup per day for
+                              exclusivity. <br />
+                              For groups of more than 20 people, please <strong>contact us</strong>.
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <div className="flex justify-between sm:justify-between sm:gap-5 pt-2 sm:pt-3">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setShowBookingFlow(false)}
+                        className="border-none text-[#3C2317] cursor-pointer hover:bg-[#3C2317] hover:text-[#FBF9D9]"
+                      >
+                        Back
+                      </Button>
+
+                      <Button
+                        type="button"
+                        onClick={() => handleStepChange(2)}
+                        className="bg-[#3C2317] text-[#FBF9D9] hover:bg-[#5D4037] cursor-pointer"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {dateConstraints?.blocked && (
+                  <div className="flex justify-start pt-2 sm:pt-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowBookingFlow(false)}
+                      className="border-none text-[#3C2317] cursor-pointer hover:bg-[#3C2317] hover:text-[#FBF9D9]"
+                    >
+                      Back
+                    </Button>
+                  </div>
+                )}
               </>
             )}
 
