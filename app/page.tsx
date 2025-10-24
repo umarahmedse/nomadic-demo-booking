@@ -1644,7 +1644,7 @@ export default function BookingPage() {
                     {/* CHANGE START */}
                     {formData.bookingDate && dateConstraints?.blocked && (
                       <div className="mt-4 p-6 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 rounded-xl text-center">
-                        <div className=" w-96">
+                        <div className=" w-96 mx-auto">
                           <DotLottieReact src="/dateerror.lottie" loop autoplay />
                         </div>
                         <h3 className="text-lg font-bold text-red-800 mb-2">
