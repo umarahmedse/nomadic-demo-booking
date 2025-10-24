@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const db = await getDatabase()
     const filter: any = {}
     if (scope) filter.scope = scope
-    const items = await db.collection("dateBlocks").find(filter).sort({ date: 1 }).toArray()
+    const items = await db.collection("dateBlocks").find(filter).sort({ startDate: 1 }).toArray()
     return NextResponse.json({ items })
   } catch (e) {
     console.error("[blocked-dates][GET] error:", e)
@@ -23,25 +23,28 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { date, scope, reason } = await request.json()
-    if (!date || !scope || !["camping", "barbecue"].includes(scope)) {
-      return NextResponse.json({ error: "date and valid scope are required" }, { status: 400 })
+    const { startDate, endDate, scope, reason } = await request.json()
+    if (!startDate || !scope || !["camping", "barbecue"].includes(scope)) {
+      return NextResponse.json({ error: "startDate and valid scope are required" }, { status: 400 })
     }
-    const day = toMidnight(date)
+
+    const start = toMidnight(startDate)
+    const end = endDate ? toMidnight(endDate) : start
+
+    // Ensure end date is not before start date
+    if (end < start) {
+      return NextResponse.json({ error: "End date must be after or equal to start date" }, { status: 400 })
+    }
+
     const db = await getDatabase()
-    await db.collection("dateBlocks").updateOne(
-      { date: day, scope },
-      {
-        $set: {
-          date: day,
-          scope,
-          reason: (reason || "").trim() || null,
-          updatedAt: new Date(),
-        },
-        $setOnInsert: { createdAt: new Date() },
-      },
-      { upsert: true },
-    )
+    await db.collection("dateBlocks").insertOne({
+      startDate: start,
+      endDate: end,
+      scope,
+      reason: (reason || "").trim() || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
     return NextResponse.json({ success: true })
   } catch (e) {
     console.error("[blocked-dates][POST] error:", e)

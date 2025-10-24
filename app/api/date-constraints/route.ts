@@ -14,13 +14,16 @@ export async function GET(request: NextRequest) {
     const bookingDate = new Date(date)
     const dayMid = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate())
 
-    // Check admin block for camping scope
-    const block = await db.collection("dateBlocks").findOne({ date: dayMid, scope: "camping" })
+    const block = await db.collection("dateBlocks").findOne({
+      scope: "camping",
+      startDate: { $lte: dayMid },
+      endDate: { $gte: dayMid },
+    })
+
     if (block) {
       return NextResponse.json({
         blocked: true,
         blockedReason: block.reason || null,
-        // Provide safe defaults so UI remains stable
         lockedLocation: null,
         totalTents: 0,
         remainingCapacity: 0,
@@ -31,13 +34,13 @@ export async function GET(request: NextRequest) {
     }
 
     const settings = await db.collection("settings").findOne({})
-    const maxTentsPerDay = settings?.maxTentsPerDay || 15 // Default to 15 if not set
+    const maxTentsPerDay = settings?.maxTentsPerDay || 15
 
     const existingBookings = await db
       .collection("bookings")
       .find({
-        bookingDate: bookingDate,
-        isPaid: true, // Only count paid bookings
+        bookingDate: dayMid,
+        isPaid: true,
       })
       .toArray()
 
@@ -87,8 +90,12 @@ export async function POST(request: NextRequest) {
     const bookingDate = new Date(date)
     const dayMid = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate())
 
-    // Check admin block for camping scope
-    const block = await db.collection("dateBlocks").findOne({ date: dayMid, scope: "camping" })
+    const block = await db.collection("dateBlocks").findOne({
+      scope: "camping",
+      startDate: { $lte: dayMid },
+      endDate: { $gte: dayMid },
+    })
+
     if (block) {
       return NextResponse.json(
         {
@@ -99,26 +106,25 @@ export async function POST(request: NextRequest) {
     }
 
     const settings = await db.collection("settings").findOne({})
-    const maxTentsPerDay = settings?.maxTentsPerDay || 15 // Default to 15 if not set
+    const maxTentsPerDay = settings?.maxTentsPerDay || 15
 
     const existingBookings = await db
       .collection("bookings")
       .find({
-        bookingDate: bookingDate,
-        isPaid: true, // Only count paid bookings
+        bookingDate: dayMid,
+        isPaid: true,
       })
       .toArray()
 
     const lockedLocation = existingBookings.length > 0 ? existingBookings[0].location : location
     const totalTents = existingBookings.reduce((sum, booking) => sum + booking.numberOfTents, 0)
 
-    // Update or create date location lock
     await db.collection("dateLocationLocks").updateOne(
       { date: bookingDate },
       {
         $set: {
           lockedLocation,
-          totalTents, // Store actual total from bookings
+          totalTents,
           updatedAt: new Date(),
         },
       },
@@ -129,7 +135,7 @@ export async function POST(request: NextRequest) {
       success: true,
       lockedLocation,
       totalTents,
-      remainingCapacity: maxTentsPerDay - totalTents, // Use dynamic capacity
+      remainingCapacity: maxTentsPerDay - totalTents,
       maxBookingsReached: existingBookings.length >= 3,
     })
   } catch (error) {

@@ -11,8 +11,12 @@ export async function GET(request: NextRequest) {
     const day = new Date(date)
     const dayMid = new Date(day.getFullYear(), day.getMonth(), day.getDate())
 
-    // Check admin block for barbecue scope
-    const block = await db.collection("dateBlocks").findOne({ date: dayMid, scope: "barbecue" })
+    const block = await db.collection("dateBlocks").findOne({
+      scope: "barbecue",
+      startDate: { $lte: dayMid },
+      endDate: { $gte: dayMid },
+    })
+
     if (block) {
       return NextResponse.json({
         booked: false,

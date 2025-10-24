@@ -102,6 +102,17 @@ export default function AdminDashboard() {
     date: "",
     reason: "",
   })
+  const [blockFormRange, setBlockFormRange] = useState<{
+    scope: "camping" | "barbecue"
+    startDate: string
+    endDate: string
+    reason: string
+  }>({
+    scope: "camping",
+    startDate: "",
+    endDate: "",
+    reason: "",
+  })
   const [blockLoading, setBlockLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [startDate, setStartDate] = useState("")
@@ -109,6 +120,7 @@ export default function AdminDashboard() {
   const [isManagementMode, setIsManagementMode] = useState(false)
   const [localStartDate, setLocalStartDate] = useState("")
   const [localEndDate, setLocalEndDate] = useState("")
+  const [blockingMode, setBlockingMode] = useState<"single" | "range">("single")
 
   useEffect(() => {
     fetchDashboardData()
@@ -206,23 +218,48 @@ export default function AdminDashboard() {
   }
 
   const addBlock = async () => {
-    if (!blockForm.date) {
-      toast.error("Please select a date to block")
-      return
+    if (blockingMode === "single") {
+      if (!blockForm.date) {
+        toast.error("Please select a date to block")
+        return
+      }
+    } else {
+      if (!blockFormRange.startDate || !blockFormRange.endDate) {
+        toast.error("Please select both start and end dates")
+        return
+      }
+      const start = new Date(blockFormRange.startDate)
+      const end = new Date(blockFormRange.endDate)
+      if (end < start) {
+        toast.error("End date must be after or equal to start date")
+        return
+      }
     }
+
     setBlockLoading(true)
     try {
+      const payload =
+        blockingMode === "single"
+          ? blockForm
+          : {
+              startDate: blockFormRange.startDate,
+              endDate: blockFormRange.endDate,
+              scope: blockFormRange.scope,
+              reason: blockFormRange.reason,
+            }
+
       const res = await fetch("/api/blocked-dates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(blockForm),
+        body: JSON.stringify(payload),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
         throw new Error(err.error || "Failed to add block")
       }
-      toast.success("Date blocked successfully")
+      toast.success(blockingMode === "single" ? "Date blocked successfully" : "Date range blocked successfully")
       setBlockForm((p) => ({ ...p, reason: "" }))
+      setBlockFormRange((p) => ({ ...p, reason: "" }))
       await fetchBlocks()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to block date")
@@ -460,50 +497,124 @@ export default function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label className="text-[#3C2317]">Scope</Label>
-                <Select
-                  value={blockForm.scope}
-                  onValueChange={(v) => setBlockForm((p) => ({ ...p, scope: v as "camping" | "barbecue" }))}
-                >
-                  <SelectTrigger className="border-[#D3B88C]">
-                    <SelectValue placeholder="Select scope" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="camping">Camping</SelectItem>
-                    <SelectItem value="barbecue">Barbecue</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="block-date" className="text-[#3C2317]">
-                  Date
-                </Label>
-                <Input
-                  id="block-date"
-                  type="date"
-                  value={blockForm.date}
-                  onChange={(e) => setBlockForm((p) => ({ ...p, date: e.target.value }))}
-                  className="border-[#D3B88C] bg-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="block-reason" className="text-[#3C2317]">
-                  Reason (optional)
-                </Label>
-                <Input
-                  id="block-reason"
-                  placeholder="e.g., Maintenance"
-                  value={blockForm.reason}
-                  onChange={(e) => setBlockForm((p) => ({ ...p, reason: e.target.value }))}
-                  className="border-[#D3B88C] bg-white"
-                />
-              </div>
+            <div className="flex gap-2 mb-4">
+              <Button
+                onClick={() => setBlockingMode("single")}
+                variant={blockingMode === "single" ? "default" : "outline"}
+                className={`cursor-pointer ${blockingMode === "single" ? "bg-[#3C2317] text-white" : "border-[#D3B88C]"}`}
+              >
+                Block Single Date
+              </Button>
+              <Button
+                onClick={() => setBlockingMode("range")}
+                variant={blockingMode === "range" ? "default" : "outline"}
+                className={`cursor-pointer ${blockingMode === "range" ? "bg-[#3C2317] text-white" : "border-[#D3B88C]"}`}
+              >
+                Block Date Range
+              </Button>
             </div>
+
+            {blockingMode === "single" ? (
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[#3C2317]">Scope</Label>
+                  <Select
+                    value={blockForm.scope}
+                    onValueChange={(v) => setBlockForm((p) => ({ ...p, scope: v as "camping" | "barbecue" }))}
+                  >
+                    <SelectTrigger className="border-[#D3B88C]">
+                      <SelectValue placeholder="Select scope" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="camping">Camping</SelectItem>
+                      <SelectItem value="barbecue">Barbecue</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="block-date" className="text-[#3C2317]">
+                    Date
+                  </Label>
+                  <Input
+                    id="block-date"
+                    type="date"
+                    value={blockForm.date}
+                    onChange={(e) => setBlockForm((p) => ({ ...p, date: e.target.value }))}
+                    className="border-[#D3B88C] bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="block-reason" className="text-[#3C2317]">
+                    Reason (optional)
+                  </Label>
+                  <Input
+                    id="block-reason"
+                    placeholder="e.g., Maintenance"
+                    value={blockForm.reason}
+                    onChange={(e) => setBlockForm((p) => ({ ...p, reason: e.target.value }))}
+                    className="border-[#D3B88C] bg-white"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[#3C2317]">Scope</Label>
+                  <Select
+                    value={blockFormRange.scope}
+                    onValueChange={(v) => setBlockFormRange((p) => ({ ...p, scope: v as "camping" | "barbecue" }))}
+                  >
+                    <SelectTrigger className="border-[#D3B88C]">
+                      <SelectValue placeholder="Select scope" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="camping">Camping</SelectItem>
+                      <SelectItem value="barbecue">Barbecue</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="block-start-date" className="text-[#3C2317]">
+                    Start Date
+                  </Label>
+                  <Input
+                    id="block-start-date"
+                    type="date"
+                    value={blockFormRange.startDate}
+                    onChange={(e) => setBlockFormRange((p) => ({ ...p, startDate: e.target.value }))}
+                    className="border-[#D3B88C] bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="block-end-date" className="text-[#3C2317]">
+                    End Date
+                  </Label>
+                  <Input
+                    id="block-end-date"
+                    type="date"
+                    value={blockFormRange.endDate}
+                    onChange={(e) => setBlockFormRange((p) => ({ ...p, endDate: e.target.value }))}
+                    className="border-[#D3B88C] bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="block-range-reason" className="text-[#3C2317]">
+                    Reason (optional)
+                  </Label>
+                  <Input
+                    id="block-range-reason"
+                    placeholder="e.g., Maintenance"
+                    value={blockFormRange.reason}
+                    onChange={(e) => setBlockFormRange((p) => ({ ...p, reason: e.target.value }))}
+                    className="border-[#D3B88C] bg-white"
+                  />
+                </div>
+              </div>
+            )}
+
             <div>
               <Button onClick={addBlock} disabled={blockLoading} className="cursor-pointer">
-                {blockLoading ? "Saving..." : "Block Date"}
+                {blockLoading ? "Saving..." : blockingMode === "single" ? "Block Date" : "Block Date Range"}
               </Button>
             </div>
 
@@ -511,7 +622,8 @@ export default function AdminDashboard() {
               <Table>
                 <TableHeader>
                   <TableRow className="border-[#D3B88C]/30 bg-gradient-to-r from-[#3C2317]/90 to-[#5D4037]/90">
-                    <TableHead className="text-[#FBF9D9] font-bold py-3 px-4">Date</TableHead>
+                    <TableHead className="text-[#FBF9D9] font-bold py-3 px-4">Start Date</TableHead>
+                    <TableHead className="text-[#FBF9D9] font-bold py-3 px-4">End Date</TableHead>
                     <TableHead className="text-[#FBF9D9] font-bold py-3 px-4">Scope</TableHead>
                     <TableHead className="text-[#FBF9D9] font-bold py-3 px-4">Reason</TableHead>
                     <TableHead className="text-[#FBF9D9] font-bold py-3 px-4">Actions</TableHead>
@@ -520,7 +632,7 @@ export default function AdminDashboard() {
                 <TableBody>
                   {blocks.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="py-6 text-center text-[#3C2317]/60">
+                      <TableCell colSpan={5} className="py-6 text-center text-[#3C2317]/60">
                         No blocked dates yet.
                       </TableCell>
                     </TableRow>
@@ -531,7 +643,14 @@ export default function AdminDashboard() {
                         className={`border-[#D3B88C]/20 ${i % 2 === 0 ? "bg-white" : "bg-[#FBF9D9]/30"}`}
                       >
                         <TableCell className="py-3 px-4">
-                          {new Date(b.date).toLocaleDateString("en-GB", {
+                          {new Date(b.startDate || b.date).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })}
+                        </TableCell>
+                        <TableCell className="py-3 px-4">
+                          {new Date(b.endDate || b.date).toLocaleDateString("en-GB", {
                             day: "2-digit",
                             month: "short",
                             year: "numeric",
