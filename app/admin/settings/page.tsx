@@ -37,6 +37,7 @@ export default function AdminSettingsPage() {
     type: "total" as "total" | "per-tent",
   })
   const [newLocation, setNewLocation] = useState({ name: "", weekdayPrice: 0, weekendPrice: 0 })
+  const [editingSpecialPricing, setEditingSpecialPricing] = useState<any>(null)
 
   useEffect(() => {
     fetchSettings()
@@ -98,6 +99,13 @@ export default function AdminSettingsPage() {
     current[keys[keys.length - 1]] = value
 
     setSettings(newSettings)
+  }
+
+  const updateSpecialPricingItem = (id: string, updates: any) => {
+    if (!settings) return
+    const specialPricing = settings.specialPricing || []
+    const updated = specialPricing.map((p: any) => (p.id === id ? { ...p, ...updates } : p))
+    updateSettings("specialPricing", updated)
   }
 
   const addCustomAddOn = () => {
@@ -347,49 +355,145 @@ export default function AdminSettingsPage() {
                   <h4 className="font-medium text-[#3C2317] text-sm">Active Special Pricing Periods</h4>
                   <div className="grid gap-3">
                     {settings.specialPricing.map((pricing: any, index: number) => (
-                      <div
-                        key={pricing.id}
-                        className={`flex items-center justify-between p-4 border border-[#D3B88C]/50 rounded-lg transition-colors hover:bg-[#E6CFA9]/20 ${
-                          index % 2 === 0 ? "bg-white/30" : "bg-[#FBF9D9]/30"
-                        }`}
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <h5 className="font-medium text-[#3C2317]">{pricing.name}</h5>
-                            <Badge variant="outline" className="border-[#D3B88C] text-[#3C2317] text-xs">
-                              +AED {pricing.amount} ({pricing.type === "per-tent" ? "per tent" : "total"})
-                            </Badge>
-                            {!pricing.isActive && (
-                              <Badge variant="outline" className="border-red-200 text-red-600 text-xs">
-                                Inactive
-                              </Badge>
-                            )}
+                      <div key={pricing.id}>
+                        {editingSpecialPricing?.id === pricing.id ? (
+                          <div className="border border-[#D3B88C]/50 rounded-lg p-4 bg-[#E6CFA9]/20 space-y-4">
+                            <h5 className="font-medium text-[#3C2317]">Edit Special Pricing</h5>
+                            <div className="grid md:grid-cols-5 gap-4">
+                              <div className="space-y-2">
+                                <Label className="text-[#3C2317]">Event Name</Label>
+                                <Input
+                                  value={editingSpecialPricing.name}
+                                  onChange={(e) =>
+                                    setEditingSpecialPricing({ ...editingSpecialPricing, name: e.target.value })
+                                  }
+                                  className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[#3C2317]">Start Date</Label>
+                                <Input
+                                  type="date"
+                                  value={editingSpecialPricing.startDate}
+                                  onChange={(e) =>
+                                    setEditingSpecialPricing({ ...editingSpecialPricing, startDate: e.target.value })
+                                  }
+                                  className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[#3C2317]">End Date</Label>
+                                <Input
+                                  type="date"
+                                  value={editingSpecialPricing.endDate}
+                                  onChange={(e) =>
+                                    setEditingSpecialPricing({ ...editingSpecialPricing, endDate: e.target.value })
+                                  }
+                                  className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[#3C2317]">Amount (AED)</Label>
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  value={editingSpecialPricing.amount}
+                                  onChange={(e) =>
+                                    setEditingSpecialPricing({
+                                      ...editingSpecialPricing,
+                                      amount: Number(e.target.value),
+                                    })
+                                  }
+                                  className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[#3C2317]">Apply To</Label>
+                                <select
+                                  value={editingSpecialPricing.type || "total"}
+                                  onChange={(e) =>
+                                    setEditingSpecialPricing({
+                                      ...editingSpecialPricing,
+                                      type: e.target.value as "total" | "per-tent",
+                                    })
+                                  }
+                                  className="w-full px-3 py-2 border border-[#D3B88C] rounded-md focus:border-[#3C2317] focus:ring-1 focus:ring-[#3C2317] bg-white/50 text-[#3C2317]"
+                                >
+                                  <option value="total">Total Booking</option>
+                                  <option value="per-tent">Per Tent</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => {
+                                  updateSpecialPricingItem(pricing.id, editingSpecialPricing)
+                                  setEditingSpecialPricing(null)
+                                  toast.success("Special pricing updated")
+                                }}
+                                className="bg-gradient-to-r from-[#84cc16] to-[#65a30d] hover:from-[#84cc16]/90 hover:to-[#65a30d]/90 text-white"
+                              >
+                                Save Changes
+                              </Button>
+                              <Button
+                                onClick={() => setEditingSpecialPricing(null)}
+                                variant="outline"
+                                className="border-[#D3B88C] text-[#3C2317]"
+                              >
+                                Cancel
+                              </Button>
+                            </div>
                           </div>
-                          <p className="text-xs text-[#3C2317]/60 mt-1">
-                            {new Date(pricing.startDate).toLocaleDateString()} -{" "}
-                            {new Date(pricing.endDate).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            checked={pricing.isActive}
-                            onCheckedChange={(checked) => {
-                              const updated = settings.specialPricing.map((p: any) =>
-                                p.id === pricing.id ? { ...p, isActive: checked } : p,
-                              )
-                              updateSettings("specialPricing", updated)
-                            }}
-                            className="border-[#D3B88C]"
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeSpecialPricing(pricing.id)}
-                            className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 cursor-pointer transition-all duration-200 h-8 px-2"
+                        ) : (
+                          <div
+                            className={`flex items-center justify-between p-4 border border-[#D3B88C]/50 rounded-lg transition-colors hover:bg-[#E6CFA9]/20 ${
+                              index % 2 === 0 ? "bg-white/30" : "bg-[#FBF9D9]/30"
+                            }`}
                           >
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </div>
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-3">
+                                <h5 className="font-medium text-[#3C2317]">{pricing.name}</h5>
+                                <Badge variant="outline" className="border-[#D3B88C] text-[#3C2317] text-xs">
+                                  +AED {pricing.amount} ({pricing.type === "per-tent" ? "per tent" : "total"})
+                                </Badge>
+                                {!pricing.isActive && (
+                                  <Badge variant="outline" className="border-red-200 text-red-600 text-xs">
+                                    Inactive
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-[#3C2317]/60 mt-1">
+                                {new Date(pricing.startDate).toLocaleDateString()} -{" "}
+                                {new Date(pricing.endDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                checked={pricing.isActive}
+                                onCheckedChange={(checked) => {
+                                  updateSpecialPricingItem(pricing.id, { isActive: checked })
+                                }}
+                                className="border-[#D3B88C]"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setEditingSpecialPricing(pricing)}
+                                className="border-blue-200 text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 cursor-pointer transition-all duration-200 h-8 px-2"
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => removeSpecialPricing(pricing.id)}
+                                className="border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600 cursor-pointer transition-all duration-200 h-8 px-2"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

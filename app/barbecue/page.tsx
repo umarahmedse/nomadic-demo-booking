@@ -63,6 +63,7 @@ const calculateBarbecuePrice = (
   const basePrice = settings.groupPrices[groupSize]
 
   let specialPricingAmount = 0
+  let specialPricingName = "" // track special pricing name
   if (bookingDate && settings.specialPricing) {
     const date = new Date(bookingDate)
     const specialPrice = settings.specialPricing.find((sp) => {
@@ -73,6 +74,7 @@ const calculateBarbecuePrice = (
     })
     if (specialPrice) {
       specialPricingAmount = specialPrice.amount
+      specialPricingName = specialPrice.name // store the name
     }
   }
 
@@ -91,7 +93,7 @@ const calculateBarbecuePrice = (
   const vat = subtotal * settings.vatRate
   const total = subtotal + vat
 
-  return { subtotal, vat, total, basePrice, addOnsTotal, customAddOnsCost, specialPricingAmount }
+  return { subtotal, vat, total, basePrice, addOnsTotal, customAddOnsCost, specialPricingAmount, specialPricingName } // return name
 }
 
 const fetchPricingSettings = async () => {
@@ -1425,7 +1427,9 @@ export default function BarbecueBookingPage() {
                   {pricing.specialPricingAmount > 0 && (
                     <div className="flex justify-between items-center text-xs sm:text-sm p-2 sm:p-3 bg-gradient-to-r from-[#E6CFA9]/20 to-[#D3B88C]/20 rounded-lg border border-[#D3B88C]/20">
                       <div className="flex items-center space-x-2">
-                        <span className="text-[#3C2317]/80 font-medium">Special Pricing</span>
+                        <span className="text-[#3C2317]/80 font-medium">
+                          {pricing.specialPricingName || "Special Pricing"}
+                        </span>
                       </div>
                       <span className="text-[#3C2317] font-semibold">
                         AED {pricing.specialPricingAmount.toFixed(2)}
