@@ -185,6 +185,12 @@ export default function InvoiceForm({ booking, bookingType, onBack }: InvoiceFor
                 />
               </div>
             </div>
+            {booking.specialPricingName && (
+              <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="text-sm font-medium text-orange-900">🎉 Special Event Pricing Applied</div>
+                <div className="text-sm text-orange-800 mt-1">{booking.specialPricingName}</div>
+              </div>
+            )}
           </div>
 
           {/* Pricing Details */}

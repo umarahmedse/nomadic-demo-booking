@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { FileText, Calendar } from "lucide-react"
 import InvoiceForm from "@/components/invoice/invoice-form"
-import BulkInvoiceDownload from "@/components/invoice/bulk-invoice-download"
 import type { Booking } from "@/lib/types"
 
 type BookingType = "camping" | "barbecue"
@@ -176,6 +175,11 @@ export default function InvoiceGeneratorPage() {
                               year: "numeric",
                             })}
                           </div>
+                          {booking.specialPricingName && (
+                            <div className="mt-2 inline-block px-2 py-1 bg-orange-100 border border-orange-300 rounded text-xs font-medium text-orange-700">
+                              🎉 {booking.specialPricingName}
+                            </div>
+                          )}
                         </div>
                         <div className="text-right">
                           <div className="font-bold text-[#0891b2]">AED {booking.total.toFixed(2)}</div>

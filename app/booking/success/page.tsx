@@ -163,6 +163,15 @@ export default function BookingSuccessPage() {
                   <p className="text-[#3C2317]/80 text-sm">{booking.notes}</p>
                 </div>
               )}
+
+              {booking.specialPricingName && booking.specialPricingAmount > 0 && (
+                <div className="bg-gradient-to-r from-[#f59e0b]/20 to-[#d97706]/20 p-3 rounded-lg border border-[#f59e0b]/30 mt-3">
+                  <p className="font-medium text-[#92400e] text-sm flex items-center gap-2">
+                    🎉 Special Pricing Applied
+                  </p>
+                  <p className="text-[#92400e] text-sm mt-1">{booking.specialPricingName}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -178,6 +187,12 @@ export default function BookingSuccessPage() {
                   <span className="text-[#3C2317] text-sm">Subtotal</span>
                   <span className="text-[#3C2317] text-sm">AED {booking.subtotal.toFixed(2)}</span>
                 </div>
+                {booking.specialPricingAmount > 0 && (
+                  <div className="flex justify-between text-sm text-[#92400e] font-medium">
+                    <span>{booking.specialPricingName || "Special Pricing"}</span>
+                    <span>AED {booking.specialPricingAmount.toFixed(2)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-xs text-[#3C2317]/80">
                   <span>VAT (5%)</span>
                   <span>AED {booking.vat.toFixed(2)}</span>
@@ -201,54 +216,51 @@ export default function BookingSuccessPage() {
         </div>
 
         {/* Next Steps */}
-<Card className="mt-6 border-[#D3B88C]/50 shadow-xl bg-[#FBF9D9]/80 backdrop-blur-sm !py-0 !gap-0">
-  <CardHeader className="bg-gradient-to-r from-[#D3B88C]/20 to-[#E6CFA9]/20 px-2 sm:px-3 lg:px-4 h-8 sm:h-10 py-1.5 sm:py-2 border-b border-[#D3B88C]/30">
-    <CardTitle className="text-[#3C2317] flex items-center text-sm sm:text-base lg:text-base font-bold tracking-wide">
-      What Happens Next?
-    </CardTitle>
-  </CardHeader>
-  <CardContent className="p-4 space-y-3">
-    
-    <div className="flex items-start space-x-2">
-      <Mail className="w-4 h-4 text-[#3C2317] mt-0.5" />
-      <div>
-        <p className="font-medium text-[#3C2317] text-sm">Confirmation Email</p>
-        <p className="text-[#3C2317]/80 text-sm">
-          You'll receive a detailed confirmation email at{" "}
-          <span className="font-medium">{booking.customerEmail}</span> within the next few minutes. 
-          This will include full booking details, meeting point location and your arrival time. 
-        </p>
-      </div>
-    </div>
+        <Card className="mt-6 border-[#D3B88C]/50 shadow-xl bg-[#FBF9D9]/80 backdrop-blur-sm !py-0 !gap-0">
+          <CardHeader className="bg-gradient-to-r from-[#D3B88C]/20 to-[#E6CFA9]/20 px-2 sm:px-3 lg:px-4 h-8 sm:h-10 py-1.5 sm:py-2 border-b border-[#D3B88C]/30">
+            <CardTitle className="text-[#3C2317] flex items-center text-sm sm:text-base lg:text-base font-bold tracking-wide">
+              What Happens Next?
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-start space-x-2">
+              <Mail className="w-4 h-4 text-[#3C2317] mt-0.5" />
+              <div>
+                <p className="font-medium text-[#3C2317] text-sm">Confirmation Email</p>
+                <p className="text-[#3C2317]/80 text-sm">
+                  You'll receive a detailed confirmation email at{" "}
+                  <span className="font-medium">{booking.customerEmail}</span> within the next few minutes. This will
+                  include full booking details, meeting point location and your arrival time.
+                </p>
+              </div>
+            </div>
 
-    <div className="flex items-start space-x-2">
-      <Calendar className="w-4 h-4 text-[#3C2317] mt-0.5" />
-      <div>
-        <p className="font-medium text-[#3C2317] text-sm">Pre-Trip Contact</p>
-        <p className="text-[#3C2317]/80 text-sm">
-          Our team will contact you 24–48 hours before your setup to say hello, 
-          reshare details, and make sure you have everything you need.
-        </p>
-      </div>
-    </div>
+            <div className="flex items-start space-x-2">
+              <Calendar className="w-4 h-4 text-[#3C2317] mt-0.5" />
+              <div>
+                <p className="font-medium text-[#3C2317] text-sm">Pre-Trip Contact</p>
+                <p className="text-[#3C2317]/80 text-sm">
+                  Our team will contact you 24–48 hours before your setup to say hello, reshare details, and make sure
+                  you have everything you need.
+                </p>
+              </div>
+            </div>
 
-    <div className="flex items-start space-x-2">
-      <Shield className="w-4 h-4 text-[#3C2317] mt-0.5" />
-      <div>
-        <p className="font-medium text-[#3C2317] text-sm">Camping Day</p>
-        <p className="text-[#3C2317]/80 text-sm">
-          Arrive at the designated meeting point at the pre-arranged time 
-          and get ready for an unforgettable desert experience! <br />
-          <span className="font-medium">Note:</span> Late arrival of more than 1 hour will be classed as a 
-          <span className="font-medium"> “No-Show”</span> and your booking may be cancelled, 
-          so please ensure you arrive on time.
-        </p>
-      </div>
-    </div>
-
-  </CardContent>
-</Card>
-
+            <div className="flex items-start space-x-2">
+              <Shield className="w-4 h-4 text-[#3C2317] mt-0.5" />
+              <div>
+                <p className="font-medium text-[#3C2317] text-sm">Camping Day</p>
+                <p className="text-[#3C2317]/80 text-sm">
+                  Arrive at the designated meeting point at the pre-arranged time and get ready for an unforgettable
+                  desert experience! <br />
+                  <span className="font-medium">Note:</span> Late arrival of more than 1 hour will be classed as a
+                  <span className="font-medium"> "No-Show"</span> and your booking may be cancelled, so please ensure
+                  you arrive on time.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
@@ -259,25 +271,20 @@ export default function BookingSuccessPage() {
           >
             <Link href="https://nomadic.ae/">Return Home</Link>
           </Button>
-             <Button
-                                onClick={() =>
-                                  window.open(
-                                    "https://wa.me/971585271420?text=Hi%21%20I%20have%20a%20question%20about%20the%20Nomadic%20camping%20setup.",
-                                    "_blank",
-                                  )
-                                }
-                                className="bg-[#25D366] hover:bg-[#25D366] text-white !px-8 !py-4  flex items-center justify-center gap-2 text-sm font-medium shadow-md hover:shadow-lg transition cursor-pointer"
-                              >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 32 32"
-                                  fill="currentColor"
-                                  className="w-5 h-5"
-                                >
-                                  <path d="M16 0C7.2 0 0 7.2 0 16c0 2.8.7 5.5 2.1 7.9L0 32l8.3-2.2c2.3 1.3 4.9 2 7.7 2 8.8 0 16-7.2 16-16S24.8 0 16 0zm0 29c-2.5 0-4.9-.7-7-2l-.5-.3-4.9 1.3 1.3-4.8-.3-.5C3.4 21.6 3 18.8 3 16 3 8.8 8.8 3 16 3s13 5.8 13 13-5.8 13-13 13zm7.4-9.4c-.4-.2-2.3-1.1-2.6-1.2-.4-.2-.6-.2-.9.2-.3.4-1 1.2-1.2 1.4-.2.2-.4.3-.8.1-.4-.2-1.6-.6-3-1.9-1.1-1-1.9-2.2-2.1-2.6-.2-.4 0-.6.2-.8.2-.2.4-.4.6-.6.2-.2.3-.4.5-.6.2-.2.2-.4.1-.7s-.9-2.1-1.3-2.9c-.3-.7-.6-.6-.9-.6h-.8c-.3 0-.7.1-1.1.5-.4.4-1.5 1.4-1.5 3.4s1.6 3.9 1.8 4.2c.2.3 3.1 4.7 7.7 6.6 1.1.5 2 .8 2.7 1 .6.2 1.1.2 1.6.1.5-.1 1.6-.6 1.8-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.7-.4z" />
-                                </svg>
-                                Got a Question?
-                              </Button>
+          <Button
+            onClick={() =>
+              window.open(
+                "https://wa.me/971585271420?text=Hi%21%20I%20have%20a%20question%20about%20the%20Nomadic%20camping%20setup.",
+                "_blank",
+              )
+            }
+            className="bg-[#25D366] hover:bg-[#25D366] text-white !px-8 !py-4  flex items-center justify-center gap-2 text-sm font-medium shadow-md hover:shadow-lg transition cursor-pointer"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor" className="w-5 h-5">
+              <path d="M16 0C7.2 0 0 7.2 0 16c0 2.8.7 5.5 2.1 7.9L0 32l8.3-2.2c2.3 1.3 4.9 2 7.7 2 8.8 0 16-7.2 16-16S24.8 0 16 0zm0 29c-2.5 0-4.9-.7-7-2l-.5-.3-4.9 1.3 1.3-4.8-.3-.5C3.4 21.6 3 18.8 3 16 3 8.8 8.8 3 16 3s13 5.8 13 13-5.8 13-13 13zm7.4-9.4c-.4-.2-2.3-1.1-2.6-1.2-.4-.2-.6-.2-.9.2-.3.4-1 1.2-1.2 1.4-.2.2-.4.3-.8.1-.4-.2-1.6-.6-3-1.9-1.1-1-1.9-2.2-2.1-2.6-.2-.4 0-.6.2-.8.2-.2.4-.4.6-.6.2-.2.3-.4.5-.6.2-.2.2-.4.1-.7s-.9-2.1-1.3-2.9c-.3-.7-.6-.6-.9-.6h-.8c-.3 0-.7.1-1.1.5-.4.4-1.5 1.4-1.5 3.4s1.6 3.9 1.8 4.2c.2.3 3.1 4.7 7.7 6.6 1.1.5 2 .8 2.7 1 .6.2 1.1.2 1.6.1.5-.1 1.6-.6 1.8-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.7-.4z" />
+            </svg>
+            Got a Question?
+          </Button>
         </div>
 
         {/* Conversion Tracking */}

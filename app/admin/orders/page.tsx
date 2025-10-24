@@ -241,6 +241,15 @@ export default function OrdersPage() {
                           </TableCell>
                           <TableCell className="py-4 px-6">{getStatusBadge(booking)}</TableCell>
                           <TableCell className="py-4 px-6">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {booking.specialPricingName && booking.specialPricingAmount > 0 && (
+                                <Badge className="bg-amber-100 text-amber-800 border-amber-200 font-medium text-xs whitespace-nowrap">
+                                  🎉 {booking.specialPricingName}
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-4 px-6">
                             <div className="flex items-center gap-2">
                               <Dialog>
                                 <DialogTrigger asChild>
@@ -377,6 +386,32 @@ export default function OrdersPage() {
                                                   </div>
                                                 </div>
                                               ))}
+                                            </div>
+                                          </div>
+                                        )}
+
+                                      {/* Special Pricing Section */}
+                                      {selectedBooking.specialPricingName &&
+                                        selectedBooking.specialPricingAmount > 0 && (
+                                          <div className="bg-gradient-to-r from-[#fef3c7] to-[#fde68a] rounded-xl p-6 border border-[#fbbf24]/50 shadow-sm">
+                                            <h4 className="font-bold mb-4 text-[#92400e] border-b border-[#fbbf24]/30 pb-3 flex items-center text-lg">
+                                              🎉 Special Pricing Applied
+                                            </h4>
+                                            <div className="space-y-3">
+                                              <div className="flex justify-between items-center">
+                                                <span className="text-[#92400e] font-medium">Pricing Period:</span>
+                                                <span className="font-semibold text-[#92400e]">
+                                                  {selectedBooking.specialPricingName}
+                                                </span>
+                                              </div>
+                                              <div className="flex justify-between items-center">
+                                                <span className="text-[#92400e] font-medium">
+                                                  Special Pricing Amount:
+                                                </span>
+                                                <span className="font-semibold text-[#d97706]">
+                                                  AED {selectedBooking.specialPricingAmount.toFixed(2)}
+                                                </span>
+                                              </div>
                                             </div>
                                           </div>
                                         )}
