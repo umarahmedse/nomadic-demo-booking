@@ -159,7 +159,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Calculate pricing with current settings
     const pricing = calculateBookingPrice(
       data.numberOfTents,
       data.location,
@@ -167,7 +166,7 @@ export async function POST(request: NextRequest) {
       data.hasChildren,
       customAddOnsWithSelection,
       settings,
-      data.bookingDate, // <-- ADDED: Pass booking date for special pricing calculation
+      data.bookingDate,
     )
 
     const selectedCustomAddOnsWithDetails = (data.selectedCustomAddOns || [])
@@ -193,19 +192,20 @@ export async function POST(request: NextRequest) {
       bookingDate,
       location: data.location,
       numberOfTents: data.numberOfTents,
-      adults: data.adults, // Added missing adults field
-      children: data.children, // Added missing children field
-      sleepingArrangements: data.sleepingArrangements, // Added missing sleepingArrangements field
+      adults: data.adults,
+      children: data.children,
+      sleepingArrangements: data.sleepingArrangements,
       addOns: data.addOns,
       hasChildren: data.hasChildren,
       notes: data.notes,
-      arrivalTime: data.arrivalTime, // Added missing arrivalTime field
+      arrivalTime: data.arrivalTime,
       subtotal: pricing.subtotal,
       vat: pricing.vat,
       total: pricing.total,
       selectedCustomAddOns: data.selectedCustomAddOns || [],
       customAddOnsWithDetails: selectedCustomAddOnsWithDetails,
-      specialPricingName, // Store special pricing name
+      specialPricingName,
+      specialPricingAmount: pricing.specialPricingAmount || 0,
       isPaid: false,
       createdAt: new Date(),
       updatedAt: new Date(),

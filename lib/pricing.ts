@@ -54,6 +54,7 @@ export function calculateBookingPrice(
   }
 
   let tentPrice = 0
+  let specialPricingAmount = 0
 
   if (bookingDate) {
     const date = new Date(bookingDate)
@@ -87,9 +88,11 @@ export function calculateBookingPrice(
 
     if (specialPrice) {
       if (specialPrice.type === "per-tent") {
-        tentPrice += specialPrice.amount * numberOfTents
+        specialPricingAmount = specialPrice.amount * numberOfTents
+        tentPrice += specialPricingAmount
       } else {
-        tentPrice += specialPrice.amount
+        specialPricingAmount = specialPrice.amount
+        tentPrice += specialPricingAmount
       }
     }
   } else {
@@ -125,6 +128,7 @@ export function calculateBookingPrice(
     subtotal,
     vat,
     total,
+    specialPricingAmount,
   }
 }
 

@@ -24,6 +24,7 @@ export function calculateBarbecuePrice(
   const addOnPrices = settings?.addOnPrices || ADDON_PRICES
 
   let base = groupPrices[groupSize]
+  let specialPricingAmount = 0
 
   if (bookingDate && settings?.specialPricing) {
     const date = new Date(bookingDate)
@@ -34,6 +35,7 @@ export function calculateBarbecuePrice(
       return date >= startDate && date <= endDate
     })
     if (specialPrice) {
+      specialPricingAmount = specialPrice.amount
       base = base + specialPrice.amount
     }
   }
@@ -47,5 +49,5 @@ export function calculateBarbecuePrice(
   const vat = subtotal * vatRate
   const total = subtotal + vat
 
-  return { base, addOnsCost, subtotal, vat, total }
+  return { base, addOnsCost, subtotal, vat, total, specialPricingAmount }
 }

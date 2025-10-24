@@ -35,6 +35,7 @@ export interface Booking {
     price: number
   }>
   specialPricingName?: string
+  specialPricingAmount?: number
   createdAt: Date
   updatedAt: Date
 }

@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
       vat: pricing.vat,
       total: pricing.total,
       specialPricingName,
+      specialPricingAmount: pricing.specialPricingAmount || 0,
       isPaid: false,
       createdAt: new Date(),
       updatedAt: new Date(),
