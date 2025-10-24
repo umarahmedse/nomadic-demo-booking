@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getDatabase } from "@/lib/mongodb"
-import { calculateBarbecuePrice, type BarbecueGroupSize } from "@/lib/pricing-barbecue"
+import { calculateBarbecuePrice } from "@/lib/pricing-barbecue"
+import type { BarbecueGroupSize } from "@/lib/constants"
 
 type BarbecueForm = {
   customerName: string
@@ -67,6 +68,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "This date is already booked. Please choose another." }, { status: 400 })
     }
 
+    const settings = await db.collection("barbecue_settings").findOne({})
+    let specialPricingName = ""
+    if (settings?.specialPricing) {
+      const specialPrice = settings.specialPricing.find((sp: any) => {
+        if (!sp.isActive) return false
+        const startDate = new Date(sp.startDate)
+        const endDate = new Date(sp.endDate)
+        return bMid >= startDate && bMid <= endDate
+      })
+      if (specialPrice) {
+        specialPricingName = specialPrice.name
+      }
+    }
+
     const pricing = calculateBarbecuePrice(
       data.groupSize,
       data.addOns || { charcoal: false, firewood: false, portableToilet: false },
@@ -83,6 +98,7 @@ export async function POST(request: NextRequest) {
       subtotal: pricing.subtotal,
       vat: pricing.vat,
       total: pricing.total,
+      specialPricingName,
       isPaid: false,
       createdAt: new Date(),
       updatedAt: new Date(),

@@ -145,6 +145,20 @@ export async function POST(request: NextRequest) {
       selected: data.selectedCustomAddOns?.includes(addon.id) || false,
     }))
 
+    let specialPricingName = ""
+    if (data.bookingDate && settings?.specialPricing) {
+      const bookingDateObj = new Date(data.bookingDate)
+      const specialPrice = settings.specialPricing.find((sp: any) => {
+        if (!sp.isActive) return false
+        const startDate = new Date(sp.startDate)
+        const endDate = new Date(sp.endDate)
+        return bookingDateObj >= startDate && bookingDateObj <= endDate
+      })
+      if (specialPrice) {
+        specialPricingName = specialPrice.name
+      }
+    }
+
     // Calculate pricing with current settings
     const pricing = calculateBookingPrice(
       data.numberOfTents,
@@ -190,6 +204,7 @@ export async function POST(request: NextRequest) {
       total: pricing.total,
       selectedCustomAddOns: data.selectedCustomAddOns || [],
       customAddOnsWithDetails: selectedCustomAddOnsWithDetails,
+      specialPricingName, // Store special pricing name
       isPaid: false,
       createdAt: new Date(),
       updatedAt: new Date(),

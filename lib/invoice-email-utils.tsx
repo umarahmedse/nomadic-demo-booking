@@ -153,6 +153,23 @@ export function generateInvoiceHTML(invoiceData: any, booking: any, bookingType:
           .info-value {
             color: #3C2317;
           }
+          .special-event-box {
+            margin-top: 12px;
+            padding: 10px;
+            background: #FFF3E0;
+            border-left: 3px solid #FF9800;
+            border-radius: 4px;
+          }
+          .special-event-label {
+            color: #8B6E58;
+            font-weight: 600;
+            font-size: 12px;
+          }
+          .special-event-value {
+            color: #FF9800;
+            font-weight: 600;
+            font-size: 14px;
+          }
           table {
             width: 100%;
             margin-bottom: 30px;
@@ -355,6 +372,17 @@ export function generateInvoiceHTML(invoiceData: any, booking: any, bookingType:
                   <span class="info-value">${booking.adults ? booking.adults + " adults" : booking.groupSize + " people"}</span>
                 </div>
               </div>
+              <!-- added special event pricing reference display -->
+              ${
+                booking.specialPricingName
+                  ? `
+              <div class="special-event-box">
+                <div class="special-event-label">🎉 Special Event Pricing:</div>
+                <div class="special-event-value">${booking.specialPricingName}</div>
+              </div>
+              `
+                  : ""
+              }
             </div>
 
             <table>

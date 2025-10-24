@@ -34,6 +34,7 @@ export interface Booking {
     description?: string
     price: number
   }>
+  specialPricingName?: string
   createdAt: Date
   updatedAt: Date
 }
