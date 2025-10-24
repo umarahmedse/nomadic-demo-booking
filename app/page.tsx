@@ -984,7 +984,7 @@ export default function BookingPage() {
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.JSON.stringify(bookingData),
+        body: JSON.stringify(bookingData),
       });
 
       if (!response.ok) {
@@ -2111,7 +2111,7 @@ export default function BookingPage() {
                       </Button>
                       <Button
                         type="button"
-                        onClick={() => handleStepChange(3)}
+                        onClick={() => handleStepChange(2)}
                         className="bg-[#3C2317] text-[#FBF9D9] hover:bg-[#5D4037] cursor-pointer"
                       >
                         Next
