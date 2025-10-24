@@ -1,32 +1,37 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { getDatabase } from "@/lib/mongodb"
+import { type NextRequest, NextResponse } from "next/server";
+import { getDatabase } from "@/lib/mongodb";
 
 type Settings = {
-  tentPrice: number
-  addOnPrices: { charcoal: number; firewood: number; portableToilet: number }
-  customAddOns: Array<{ id: string; name: string; price: number; description?: string }>
-  wadiSurcharge: number
-  vatRate: number
-  maxTentsPerDay: number
+  tentPrice: number;
+  addOnPrices: { charcoal: number; firewood: number; portableToilet: number };
+  customAddOns: Array<{
+    id: string;
+    name: string;
+    price: number;
+    description?: string;
+  }>;
+  wadiSurcharge: number;
+  vatRate: number;
+  maxTentsPerDay: number;
   specialPricing: Array<{
-    id: string
-    name: string
-    startDate: string
-    endDate: string
-    amount: number
-    type: "total" | "per-tent"
-    isActive: boolean
-  }>
+    id: string;
+    name: string;
+    startDate: string;
+    endDate: string;
+    amount: number;
+    type: "total" | "per-tent";
+    isActive: boolean;
+  }>;
   locations: Array<{
-    id: string
-    name: string
-    weekdayPrice: number
-    weekendPrice: number
-    surcharge: number
-    isActive: boolean
-  }>
-  updatedAt?: Date
-}
+    id: string;
+    name: string;
+    weekdayPrice: number;
+    weekendPrice: number;
+    surcharge: number;
+    isActive: boolean;
+  }>;
+  updatedAt?: Date;
+};
 
 const DEFAULTS: Settings = {
   tentPrice: 1297,
@@ -58,15 +63,17 @@ const DEFAULTS: Settings = {
       isActive: true,
     },
   ],
-}
+};
 
 export async function GET() {
   try {
-    const db = await getDatabase()
-    let settings = await db.collection("camping_settings").findOne({})
+    const db = await getDatabase();
+    let settings = await db.collection("settings").findOne({});
     if (!settings) {
-      const result = await db.collection("camping_settings").insertOne({ ...DEFAULTS, updatedAt: new Date() })
-      settings = { _id: result.insertedId, ...DEFAULTS }
+      const result = await db
+        .collection("settings")
+        .insertOne({ ...DEFAULTS, updatedAt: new Date() });
+      settings = { _id: result.insertedId, ...DEFAULTS };
     }
     return NextResponse.json({
       tentPrice: settings.tentPrice ?? DEFAULTS.tentPrice,
@@ -77,22 +84,29 @@ export async function GET() {
       maxTentsPerDay: settings.maxTentsPerDay ?? DEFAULTS.maxTentsPerDay,
       specialPricing: settings.specialPricing ?? DEFAULTS.specialPricing,
       locations: settings.locations ?? DEFAULTS.locations,
-    })
+    });
   } catch (e) {
-    console.error("Camping settings GET error:", e)
-    return NextResponse.json(DEFAULTS, { status: 200 })
+    console.error("Camping settings GET error:", e);
+    return NextResponse.json(DEFAULTS, { status: 200 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
-    const payload = (await request.json()) as Partial<Settings>
+    const payload = (await request.json()) as Partial<Settings>;
     const clean: Settings = {
       tentPrice: Number(payload.tentPrice ?? DEFAULTS.tentPrice),
       addOnPrices: {
-        charcoal: Number(payload.addOnPrices?.charcoal ?? DEFAULTS.addOnPrices.charcoal),
-        firewood: Number(payload.addOnPrices?.firewood ?? DEFAULTS.addOnPrices.firewood),
-        portableToilet: Number(payload.addOnPrices?.portableToilet ?? DEFAULTS.addOnPrices.portableToilet),
+        charcoal: Number(
+          payload.addOnPrices?.charcoal ?? DEFAULTS.addOnPrices.charcoal
+        ),
+        firewood: Number(
+          payload.addOnPrices?.firewood ?? DEFAULTS.addOnPrices.firewood
+        ),
+        portableToilet: Number(
+          payload.addOnPrices?.portableToilet ??
+            DEFAULTS.addOnPrices.portableToilet
+        ),
       },
       customAddOns: (payload.customAddOns ?? []).map((a) => ({
         id: a.id || Date.now().toString(),
@@ -101,7 +115,10 @@ export async function PATCH(request: NextRequest) {
         description: a.description || "",
       })),
       wadiSurcharge: Number(payload.wadiSurcharge ?? DEFAULTS.wadiSurcharge),
-      vatRate: typeof payload.vatRate === "number" ? payload.vatRate : DEFAULTS.vatRate,
+      vatRate:
+        typeof payload.vatRate === "number"
+          ? payload.vatRate
+          : DEFAULTS.vatRate,
       maxTentsPerDay: Number(payload.maxTentsPerDay ?? DEFAULTS.maxTentsPerDay),
       specialPricing: (payload.specialPricing ?? []).map((sp) => ({
         id: sp.id || Date.now().toString(),
@@ -121,13 +138,18 @@ export async function PATCH(request: NextRequest) {
         isActive: loc.isActive ?? true,
       })),
       updatedAt: new Date(),
-    }
+    };
 
-    const db = await getDatabase()
-    await db.collection("camping_settings").updateOne({}, { $set: clean }, { upsert: true })
-    return NextResponse.json(clean)
+    const db = await getDatabase();
+    await db
+      .collection("settings")
+      .updateOne({}, { $set: clean }, { upsert: true });
+    return NextResponse.json(clean);
   } catch (e) {
-    console.error("Camping settings PATCH error:", e)
-    return NextResponse.json({ error: "Failed to update camping settings" }, { status: 500 })
+    console.error("Camping settings PATCH error:", e);
+    return NextResponse.json(
+      { error: "Failed to update camping settings" },
+      { status: 500 }
+    );
   }
 }
