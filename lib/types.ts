@@ -68,7 +68,8 @@ export interface Settings {
     name: string
     startDate: string
     endDate: string
-    priceMultiplier: number
+    amount: number
+    type: "total" | "per-tent"
     isActive: boolean
   }>
   locations: Array<{

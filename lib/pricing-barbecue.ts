@@ -12,7 +12,8 @@ export function calculateBarbecuePrice(
       name: string
       startDate: string
       endDate: string
-      priceMultiplier: number
+      amount: number
+      type: "total" | "per-tent"
       isActive: boolean
     }>
   },
@@ -33,7 +34,7 @@ export function calculateBarbecuePrice(
       return date >= startDate && date <= endDate
     })
     if (specialPrice) {
-      base = base * specialPrice.priceMultiplier
+      base = base + specialPrice.amount
     }
   }
 

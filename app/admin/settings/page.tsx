@@ -14,7 +14,6 @@ import {
   ArrowLeft,
   SettingsIcon,
   DollarSign,
-  Tent,
   Plus,
   Trash2,
   AlertCircle,
@@ -34,7 +33,8 @@ export default function AdminSettingsPage() {
     name: "",
     startDate: "",
     endDate: "",
-    priceMultiplier: 1,
+    amount: 0,
+    type: "total" as "total" | "per-tent",
   })
   const [newLocation, setNewLocation] = useState({ name: "", weekdayPrice: 0, weekendPrice: 0 })
 
@@ -145,9 +145,9 @@ export default function AdminSettingsPage() {
       !newSpecialPricing.name ||
       !newSpecialPricing.startDate ||
       !newSpecialPricing.endDate ||
-      newSpecialPricing.priceMultiplier <= 0
+      newSpecialPricing.amount < 0
     ) {
-      toast.error("Please provide valid event name, dates, and multiplier")
+      toast.error("Please provide valid event name, dates, and amount")
       return
     }
 
@@ -162,7 +162,7 @@ export default function AdminSettingsPage() {
     ]
 
     updateSettings("specialPricing", updatedPricing)
-    setNewSpecialPricing({ name: "", startDate: "", endDate: "", priceMultiplier: 1 })
+    setNewSpecialPricing({ name: "", startDate: "", endDate: "", amount: 0, type: "total" })
     toast.success("Special pricing added successfully")
   }
 
@@ -264,7 +264,7 @@ export default function AdminSettingsPage() {
               {/* Add New Special Pricing */}
               <div className="border border-[#D3B88C]/50 rounded-lg p-4 bg-[#E6CFA9]/20">
                 <h4 className="font-medium text-[#3C2317] mb-4">Add New Special Pricing Period</h4>
-                <div className="grid md:grid-cols-4 gap-4">
+                <div className="grid md:grid-cols-5 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="specialPricingName" className="text-[#3C2317]">
                       Event Name
@@ -302,20 +302,34 @@ export default function AdminSettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="specialPricingMultiplier" className="text-[#3C2317]">
-                      Price Multiplier
+                    <Label htmlFor="specialPricingAmount" className="text-[#3C2317]">
+                      Additional Amount (AED)
                     </Label>
                     <Input
-                      id="specialPricingMultiplier"
+                      id="specialPricingAmount"
                       type="number"
                       step="0.1"
-                      placeholder="1.5"
-                      value={newSpecialPricing?.priceMultiplier || ""}
-                      onChange={(e) =>
-                        setNewSpecialPricing({ ...newSpecialPricing, priceMultiplier: Number(e.target.value) })
-                      }
+                      placeholder="1000"
+                      value={newSpecialPricing?.amount || ""}
+                      onChange={(e) => setNewSpecialPricing({ ...newSpecialPricing, amount: Number(e.target.value) })}
                       className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="specialPricingType" className="text-[#3C2317]">
+                      Apply To
+                    </Label>
+                    <select
+                      id="specialPricingType"
+                      value={newSpecialPricing?.type || "total"}
+                      onChange={(e) =>
+                        setNewSpecialPricing({ ...newSpecialPricing, type: e.target.value as "total" | "per-tent" })
+                      }
+                      className="w-full px-3 py-2 border border-[#D3B88C] rounded-md focus:border-[#3C2317] focus:ring-1 focus:ring-[#3C2317] bg-white/50 text-[#3C2317]"
+                    >
+                      <option value="total">Total Booking</option>
+                      <option value="per-tent">Per Tent</option>
+                    </select>
                   </div>
                 </div>
                 <Button
@@ -343,7 +357,7 @@ export default function AdminSettingsPage() {
                           <div className="flex items-center space-x-3">
                             <h5 className="font-medium text-[#3C2317]">{pricing.name}</h5>
                             <Badge variant="outline" className="border-[#D3B88C] text-[#3C2317] text-xs">
-                              {pricing.priceMultiplier}x
+                              +AED {pricing.amount} ({pricing.type === "per-tent" ? "per tent" : "total"})
                             </Badge>
                             {!pricing.isActive && (
                               <Badge variant="outline" className="border-red-200 text-red-600 text-xs">
@@ -885,8 +899,6 @@ export default function AdminSettingsPage() {
               )}
             </CardContent>
           </Card>
-
-          
 
           {/* Save Button */}
           <div className="flex justify-end space-x-4">

@@ -21,7 +21,8 @@ type BBQSettings = {
     name: string
     startDate: string
     endDate: string
-    priceMultiplier: number
+    amount: number
+    type: "total" | "per-tent"
     isActive: boolean
   }>
 }
@@ -42,7 +43,8 @@ export default function AdminBBQSettingsPage() {
     name: "",
     startDate: "",
     endDate: "",
-    priceMultiplier: 1,
+    amount: 0,
+    type: "total" as "total" | "per-tent",
   })
 
   useEffect(() => {
@@ -108,9 +110,9 @@ export default function AdminBBQSettingsPage() {
       !newSpecialPricing.name ||
       !newSpecialPricing.startDate ||
       !newSpecialPricing.endDate ||
-      newSpecialPricing.priceMultiplier <= 0
+      newSpecialPricing.amount < 0
     ) {
-      return toast.error("Provide valid event name, dates, and multiplier")
+      return toast.error("Provide valid event name, dates, and amount")
     }
     const specialPricing = settings?.specialPricing || []
     update("specialPricing", [
@@ -121,7 +123,7 @@ export default function AdminBBQSettingsPage() {
         isActive: true,
       },
     ])
-    setNewSpecialPricing({ name: "", startDate: "", endDate: "", priceMultiplier: 1 })
+    setNewSpecialPricing({ name: "", startDate: "", endDate: "", amount: 0, type: "total" })
     toast.success("Special pricing added")
   }
 
@@ -251,18 +253,16 @@ export default function AdminBBQSettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="bbqSpecialPricingMultiplier" className="text-[#3C2317]">
-                      Price Multiplier
+                    <Label htmlFor="bbqSpecialPricingAmount" className="text-[#3C2317]">
+                      Additional Amount (AED)
                     </Label>
                     <Input
-                      id="bbqSpecialPricingMultiplier"
+                      id="bbqSpecialPricingAmount"
                       type="number"
                       step="0.1"
-                      placeholder="1.5"
-                      value={newSpecialPricing?.priceMultiplier || ""}
-                      onChange={(e) =>
-                        setNewSpecialPricing({ ...newSpecialPricing, priceMultiplier: Number(e.target.value) })
-                      }
+                      placeholder="1000"
+                      value={newSpecialPricing?.amount || ""}
+                      onChange={(e) => setNewSpecialPricing({ ...newSpecialPricing, amount: Number(e.target.value) })}
                       className="border-[#D3B88C] focus:border-[#3C2317] bg-white/50"
                     />
                   </div>
@@ -292,7 +292,7 @@ export default function AdminBBQSettingsPage() {
                           <div className="flex items-center space-x-3">
                             <h5 className="font-medium text-[#3C2317]">{pricing.name}</h5>
                             <Badge variant="outline" className="border-[#D3B88C] text-[#3C2317] text-xs">
-                              {pricing.priceMultiplier}x
+                              +AED {pricing.amount}
                             </Badge>
                             {!pricing.isActive && (
                               <Badge variant="outline" className="border-red-200 text-red-600 text-xs">

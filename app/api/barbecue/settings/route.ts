@@ -6,6 +6,15 @@ type BBQSettings = {
   vatRate: number
   addOnPrices: { charcoal: number; firewood: number; portableToilet: number }
   customAddOns: Array<{ id: string; name: string; price: number; description?: string }>
+  specialPricing?: Array<{
+    id: string
+    name: string
+    startDate: string
+    endDate: string
+    amount: number
+    type: "total" | "per-tent"
+    isActive: boolean
+  }>
   updatedAt?: Date
 }
 
@@ -29,6 +38,7 @@ export async function GET() {
       vatRate: settings.vatRate ?? DEFAULTS.vatRate,
       addOnPrices: settings.addOnPrices ?? DEFAULTS.addOnPrices,
       customAddOns: settings.customAddOns ?? [],
+      specialPricing: settings.specialPricing ?? [],
     })
   } catch (e) {
     console.error("BBQ settings GET error:", e)
@@ -56,6 +66,15 @@ export async function PATCH(request: NextRequest) {
         name: a.name || "",
         price: Number(a.price) || 0,
         description: a.description || "",
+      })),
+      specialPricing: (payload.specialPricing ?? []).map((sp) => ({
+        id: sp.id || Date.now().toString(),
+        name: sp.name || "",
+        startDate: sp.startDate || "",
+        endDate: sp.endDate || "",
+        amount: Number(sp.amount) || 0,
+        type: (sp.type as "total" | "per-tent") || "total",
+        isActive: sp.isActive ?? true,
       })),
       updatedAt: new Date(),
     }

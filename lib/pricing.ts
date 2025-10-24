@@ -73,21 +73,24 @@ export function calculateBookingPrice(
       (loc) => loc.name.toLowerCase() === location.toLowerCase() && loc.isActive,
     )
 
-    let basePrice = locationConfig
+    const basePrice = locationConfig
       ? isWeekend
         ? locationConfig.weekendPrice
         : locationConfig.weekdayPrice
       : safeSettings.tentPrice
 
-    // Apply special pricing multiplier if applicable
-    if (specialPrice) {
-      basePrice = basePrice * specialPrice.priceMultiplier
-    }
-
     if (numberOfTents >= 2) {
       tentPrice = basePrice * numberOfTents
     } else {
       tentPrice = basePrice + wadiSingleTentSurcharge
+    }
+
+    if (specialPrice) {
+      if (specialPrice.type === "per-tent") {
+        tentPrice += specialPrice.amount * numberOfTents
+      } else {
+        tentPrice += specialPrice.amount
+      }
     }
   } else {
     tentPrice = numberOfTents === 1 ? safeSettings.tentPrice + 200 : safeSettings.tentPrice * numberOfTents

@@ -13,7 +13,8 @@ type Settings = {
     name: string
     startDate: string
     endDate: string
-    priceMultiplier: number
+    amount: number
+    type: "total" | "per-tent"
     isActive: boolean
   }>
   locations: Array<{
@@ -107,7 +108,8 @@ export async function PATCH(request: NextRequest) {
         name: sp.name || "",
         startDate: sp.startDate || "",
         endDate: sp.endDate || "",
-        priceMultiplier: Number(sp.priceMultiplier) || 1,
+        amount: Number(sp.amount) || 0,
+        type: (sp.type as "total" | "per-tent") || "total",
         isActive: sp.isActive ?? true,
       })),
       locations: (payload.locations ?? DEFAULTS.locations).map((loc) => ({
