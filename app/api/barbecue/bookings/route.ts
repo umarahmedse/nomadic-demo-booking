@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getDatabase } from "@/lib/mongodb"
-import { calculateBarbecuePrice } from "@/lib/pricing-barbecue"
+import { calculateBarbecuePrice } from "@/lib/pricing-barbecue" // Fixed import path
 import type { BarbecueGroupSize } from "@/lib/constants"
 
 type BarbecueForm = {
@@ -85,6 +85,8 @@ export async function POST(request: NextRequest) {
     const pricing = calculateBarbecuePrice(
       data.groupSize,
       data.addOns || { charcoal: false, firewood: false, portableToilet: false },
+      settings,
+      data.bookingDate,
     )
 
     const booking = {

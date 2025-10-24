@@ -167,6 +167,7 @@ export async function POST(request: NextRequest) {
       data.hasChildren,
       customAddOnsWithSelection,
       settings,
+      data.bookingDate, // <-- ADDED: Pass booking date for special pricing calculation
     )
 
     const selectedCustomAddOnsWithDetails = (data.selectedCustomAddOns || [])
