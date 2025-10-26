@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency: "aed",
             product_data: {
-              name: `Desert Camping - ${location}`,
+              name: `Nomadic بدوي Camping Rental Setup`,
               description: `${numberOfTents} tent${numberOfTents > 1 ? "s" : ""} for ${new Date(bookingDate).toLocaleDateString()}`,
             },
             unit_amount: Math.round(pricing.total * 100), // Convert to fils (smallest currency unit)

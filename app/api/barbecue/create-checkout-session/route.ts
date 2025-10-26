@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency: "aed",
             product_data: {
-              name: `Desert Barbecue Setup`,
+              name: `Nomadic بدوي Desert BBQ Setup (Up to ${groupSize} pax)`,
               description: `${groupSize} people · ${new Date(bookingDate).toLocaleDateString()}`,
             },
             unit_amount: Math.round(pricing.total * 100),
@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
         },
       ],
       mode: "payment",
-      success_url: `${origin}/barbecue/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/barbecue/failed?cancelled=true`,
+      success_url: `${origin}/bbq/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/bbq/failed?cancelled=true`,
       customer_email: customerEmail,
     })
 

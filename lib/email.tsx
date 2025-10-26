@@ -1,4 +1,4 @@
-import nodemailer from "nodemailer"
+import nodemailer from "nodemailer";
 
 // Configure transporter
 const transporter = nodemailer.createTransport({
@@ -9,10 +9,11 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-})
+});
 
 function formatAddOns(addOns) {
-  if (!addOns || Object.keys(addOns).length === 0) return `<em style="color:#8B6E58;">No standard add-ons selected</em>`
+  if (!addOns || Object.keys(addOns).length === 0)
+    return `<em style="color:#8B6E58;">No standard add-ons selected</em>`;
 
   const list = Object.entries(addOns)
     .filter(([_, value]) => value)
@@ -21,42 +22,46 @@ function formatAddOns(addOns) {
         key === "charcoal"
           ? "🔥 Charcoal"
           : key === "firewood"
-            ? "🪵 Firewood"
-            : key === "portableToilet"
-              ? "🚻 Portable Toilet"
-              : key
-      return `<li>${label}</li>`
+          ? "🪵 Firewood"
+          : key === "portableToilet"
+          ? "🚻 Portable Toilet"
+          : key;
+      return `<li>${label}</li>`;
     })
-    .join("")
+    .join("");
 
-  return `<ul style="margin:0; padding-left:18px; color:#3C2317;">${list}</ul>`
+  return `<ul style="margin:0; padding-left:18px; color:#3C2317;">${list}</ul>`;
 }
 
 function formatSleeping(arrangements) {
-  if (!arrangements?.length) return "<em style='color:#8B6E58;'>No sleeping arrangements specified</em>"
+  if (!arrangements?.length)
+    return "<em style='color:#8B6E58;'>No sleeping arrangements specified</em>";
 
-  const filtered = arrangements.filter((a) => a.arrangement !== "custom")
-  if (!filtered.length) return "<em style='color:#8B6E58;'>No sleeping arrangements specified</em>"
+  const filtered = arrangements.filter((a) => a.arrangement !== "custom");
+  if (!filtered.length)
+    return "<em style='color:#8B6E58;'>No sleeping arrangements specified</em>";
 
   const rows = filtered
     .map(
       (a) => `
         <tr>
-          <td style="padding:10px;border-bottom:1px solid #EADAC1;">Tent ${a.tentNumber}</td>
+          <td style="padding:10px;border-bottom:1px solid #EADAC1;">Tent ${
+            a.tentNumber
+          }</td>
           <td style="padding:10px;border-bottom:1px solid #EADAC1;">${
             a.arrangement === "all-singles"
               ? "All Single Beds (4 singles)"
               : a.arrangement === "two-doubles"
-                ? "Two Double Beds (2 doubles)"
-                : a.arrangement === "mix"
-                  ? "Mixed (1 double + 2 singles)"
-                  : a.arrangement === "double-bed"
-                    ? "Double Bed (1 double)"
-                    : a.arrangement
+              ? "Two Double Beds (2 doubles)"
+              : a.arrangement === "mix"
+              ? "Mixed (1 double + 2 singles)"
+              : a.arrangement === "double-bed"
+              ? "Double Bed (1 double)"
+              : a.arrangement
           }</td>
-        </tr>`,
+        </tr>`
     )
-    .join("")
+    .join("");
 
   return `
     <div style="overflow:hidden;border-radius:10px;border:1px solid #EADAC1;margin-top:8px;">
@@ -69,24 +74,24 @@ function formatSleeping(arrangements) {
         </thead>
         <tbody>${rows}</tbody>
       </table>
-    </div>`
+    </div>`;
 }
 
 function formatDate(value) {
-  const dateValue = value?.$date || value
-  if (!dateValue) return "Not specified"
-  const date = new Date(dateValue)
+  const dateValue = value?.$date || value;
+  if (!dateValue) return "Not specified";
+  const date = new Date(dateValue);
   return isNaN(date)
     ? "Invalid date"
     : date.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "long",
         year: "numeric",
-      })
+      });
 }
 
 export async function sendBookingConfirmation(booking) {
-  const bookingDate = formatDate(booking.bookingDate)
+  const bookingDate = formatDate(booking.bookingDate);
 
   const infoSection = `
   <div style="margin-top:25px;background:#FFF9F0;border:1px solid #EADAC1;border-radius:10px;padding:20px;color:#3C2317;line-height:1.6;font-size:15px;">
@@ -122,7 +127,7 @@ export async function sendBookingConfirmation(booking) {
     </ul>
 
     <p style="margin-top:20px;">Please only contact in case of serious emergencies.</p>
-  </div>`
+  </div>`;
 
   const footer = `
   <div style="margin-top:40px;text-align:center;color:#8B6E58;font-size:13px;">
@@ -133,7 +138,7 @@ export async function sendBookingConfirmation(booking) {
     <p>📞 0585271420 | ✉️ <a href="mailto:yalla@nomadic.ae" style="color:#1B8F5A;text-decoration:none;">yalla@nomadic.ae</a></p>
     <p><a href="https://www.nomadic.ae" style="color:#1B8F5A;text-decoration:none;">www.nomadic.ae</a></p>
     <p>🏢 Empire Heights A, 9th Floor, Business Bay, Dubai</p>
-  </div>`
+  </div>`;
 
   return transporter.sendMail({
     from: `"Nomadic Bookings" <${process.env.SMTP_USER}>`,
@@ -174,8 +179,8 @@ export async function sendBookingConfirmation(booking) {
               <tr>
                 <td style="padding:10px;">👨‍👩‍👧 <strong>Guests</strong></td>
                 <td style="padding:10px;">${booking.adults} adults${
-                  booking.children ? `, ${booking.children} children` : ""
-                }</td>
+      booking.children ? `, ${booking.children} children` : ""
+    }</td>
               </tr>
               <tr style="background:#FDF7EC;">
                 <td style="padding:10px;">⛺ <strong>Tents</strong></td>
@@ -198,11 +203,15 @@ export async function sendBookingConfirmation(booking) {
             <table style="width:100%;border-collapse:collapse;font-size:14px;">
               <tr style="background:#FDE68A;">
                 <td style="padding:10px;"><strong>Pricing Period</strong></td>
-                <td style="padding:10px;text-align:right;"><strong>${booking.specialPricingName}</strong></td>
+                <td style="padding:10px;text-align:right;"><strong>${
+                  booking.specialPricingName
+                }</strong></td>
               </tr>
               <tr>
                 <td style="padding:10px;">Special Pricing Amount</td>
-                <td style="padding:10px;text-align:right;color:#D97706;"><strong>AED ${booking.specialPricingAmount.toFixed(2)}</strong></td>
+                <td style="padding:10px;text-align:right;color:#D97706;"><strong>AED ${booking.specialPricingAmount.toFixed(
+                  2
+                )}</strong></td>
               </tr>
             </table>
           </div>
@@ -214,18 +223,22 @@ export async function sendBookingConfirmation(booking) {
           <div style="border:1px solid #EADAC1;border-radius:10px;overflow:hidden;">
             <table style="width:100%;border-collapse:collapse;font-size:14px;">
               <tr><td style="padding:10px;">Subtotal</td><td style="padding:10px;text-align:right;">AED ${booking.subtotal.toFixed(
-                2,
+                2
               )}</td></tr>
               ${
                 booking.specialPricingAmount > 0
-                  ? `<tr style="background:#FDF7EC;"><td style="padding:10px;">${booking.specialPricingName || "Special Pricing"}</td><td style="padding:10px;text-align:right;color:#D97706;"><strong>AED ${booking.specialPricingAmount.toFixed(2)}</strong></td></tr>`
+                  ? `<tr style="background:#FDF7EC;"><td style="padding:10px;">${
+                      booking.specialPricingName || "Special Pricing"
+                    }</td><td style="padding:10px;text-align:right;color:#D97706;"><strong>AED ${booking.specialPricingAmount.toFixed(
+                      2
+                    )}</strong></td></tr>`
                   : ""
               }
               <tr style="background:#FDF7EC;"><td style="padding:10px;">VAT</td><td style="padding:10px;text-align:right;">AED ${booking.vat.toFixed(
-                2,
+                2
               )}</td></tr>
               <tr><td style="padding:10px;"><strong>Total</strong></td><td style="padding:10px;text-align:right;color:#1B8F5A;"><strong>AED ${booking.total.toFixed(
-                2,
+                2
               )}</strong></td></tr>
               <tr style="background:#FDF7EC;"><td style="padding:10px;">Status</td><td style="padding:10px;text-align:right;">${
                 booking.isPaid ? "✅ Paid" : "❌ Pending"
@@ -243,12 +256,12 @@ export async function sendBookingConfirmation(booking) {
         </div>
       </div>
     `,
-  })
+  });
 }
 
 export async function sendAdminNotification(booking) {
-  const bookingDate = formatDate(booking.bookingDate)
-  const created = formatDate(booking.createdAt)
+  const bookingDate = formatDate(booking.bookingDate);
+  const created = formatDate(booking.createdAt);
 
   const footer = `
   <div style="margin-top:40px;text-align:center;color:#8B6E58;font-size:13px;">
@@ -259,11 +272,11 @@ export async function sendAdminNotification(booking) {
     <p>📞 0585271420 | ✉️ <a href="mailto:yalla@nomadic.ae" style="color:#1B8F5A;text-decoration:none;">yalla@nomadic.ae</a></p>
     <p><a href="https://www.nomadic.ae" style="color:#1B8F5A;text-decoration:none;">www.nomadic.ae</a></p>
     <p>🏢 Empire Heights A, 9th Floor, Business Bay, Dubai</p>
-  </div>`
+  </div>`;
 
   return transporter.sendMail({
     from: `"Nomadic Notifications" <${process.env.SMTP_USER}>`,
-    to: "umarahmedse@gmail.com",
+    to: "bookings@nomadic.ae",
     subject: `📩 New Booking – ${booking.customerName}`,
     html: `
       <div style="font-family:'Inter',Arial,sans-serif;background-color:#FFF7E8;color:#3C2317;max-width:700px;margin:auto;border-radius:16px;overflow:hidden;box-shadow:0 6px 16px rgba(0,0,0,0.08);">
@@ -273,7 +286,9 @@ export async function sendAdminNotification(booking) {
         </div>
 
         <div style="padding:24px;">
-          <p><strong>${booking.customerName}</strong> has made a new booking.</p>
+          <p><strong>${
+            booking.customerName
+          }</strong> has made a new booking.</p>
 
           <div style="margin:16px 0;border:1px solid #EADAC1;border-radius:10px;overflow:hidden;">
             <table style="width:100%;border-collapse:collapse;font-size:14px;">
@@ -295,8 +310,8 @@ export async function sendAdminNotification(booking) {
               <tr style="background:#FDF7EC;">
                 <td style="padding:10px;">👨‍👩‍👧 <strong>Guests</strong></td>
                 <td style="padding:10px;">${booking.adults} adults${
-                  booking.children ? `, ${booking.children} children` : ""
-                }</td>
+      booking.children ? `, ${booking.children} children` : ""
+    }</td>
               </tr>
               <tr style="background:#FDF7EC;">
                 <td style="padding:10px;">👨‍👩⌚ <strong>Arrival Time</strong></td>
@@ -327,11 +342,15 @@ export async function sendAdminNotification(booking) {
             <table style="width:100%;border-collapse:collapse;font-size:14px;">
               <tr style="background:#FDE68A;">
                 <td style="padding:10px;"><strong>Pricing Period</strong></td>
-                <td style="padding:10px;text-align:right;"><strong>${booking.specialPricingName}</strong></td>
+                <td style="padding:10px;text-align:right;"><strong>${
+                  booking.specialPricingName
+                }</strong></td>
               </tr>
               <tr>
                 <td style="padding:10px;">Special Pricing Amount</td>
-                <td style="padding:10px;text-align:right;color:#D97706;"><strong>AED ${booking.specialPricingAmount.toFixed(2)}</strong></td>
+                <td style="padding:10px;text-align:right;color:#D97706;"><strong>AED ${booking.specialPricingAmount.toFixed(
+                  2
+                )}</strong></td>
               </tr>
             </table>
           </div>
@@ -343,18 +362,22 @@ export async function sendAdminNotification(booking) {
           <div style="border:1px solid #EADAC1;border-radius:10px;overflow:hidden;">
             <table style="width:100%;border-collapse:collapse;font-size:14px;">
               <tr><td style="padding:10px;">Subtotal</td><td style="padding:10px;text-align:right;">AED ${booking.subtotal.toFixed(
-                2,
+                2
               )}</td></tr>
               ${
                 booking.specialPricingAmount > 0
-                  ? `<tr style="background:#FDF7EC;"><td style="padding:10px;">${booking.specialPricingName || "Special Pricing"}</td><td style="padding:10px;text-align:right;color:#D97706;"><strong>AED ${booking.specialPricingAmount.toFixed(2)}</strong></td></tr>`
+                  ? `<tr style="background:#FDF7EC;"><td style="padding:10px;">${
+                      booking.specialPricingName || "Special Pricing"
+                    }</td><td style="padding:10px;text-align:right;color:#D97706;"><strong>AED ${booking.specialPricingAmount.toFixed(
+                      2
+                    )}</strong></td></tr>`
                   : ""
               }
               <tr style="background:#FDF7EC;"><td style="padding:10px;">VAT</td><td style="padding:10px;text-align:right;">AED ${booking.vat.toFixed(
-                2,
+                2
               )}</td></tr>
               <tr><td style="padding:10px;"><strong>Total</strong></td><td style="padding:10px;text-align:right;color:#1B8F5A;"><strong>AED ${booking.total.toFixed(
-                2,
+                2
               )}</strong></td></tr>
               <tr style="background:#FDF7EC;"><td style="padding:10px;">Status</td><td style="padding:10px;text-align:right;">${
                 booking.isPaid ? "✅ Paid" : "❌ Pending"
@@ -370,5 +393,5 @@ export async function sendAdminNotification(booking) {
         </div>
       </div>
     `,
-  })
+  });
 }
