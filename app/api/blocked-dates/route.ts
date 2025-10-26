@@ -23,7 +23,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { startDate, endDate, scope, reason } = await request.json()
+    let { startDate, endDate, date, scope, reason } = await request.json()
+
+    // Convert single date to startDate if provided
+    if (date && !startDate) {
+      startDate = date
+    }
+
     if (!startDate || !scope || !["camping", "barbecue"].includes(scope)) {
       return NextResponse.json({ error: "startDate and valid scope are required" }, { status: 400 })
     }
