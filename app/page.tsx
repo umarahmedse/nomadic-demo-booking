@@ -53,7 +53,7 @@ const calculatePrice = (
   bookingDate?: string,
   children?: number,
 ) => {
-  let tentPrice = 0
+  const tentPrice = 0
   let addOnsCost = 0
   let customAddOnsCost = 0
   let wadiSurcharge = 0
@@ -83,13 +83,23 @@ const calculatePrice = (
   }
   // --- End Special Pricing Calculation ---
 
-  // Tent price logic (simplified to use settings.tentPrice directly for base)
-  tentPrice = settings.tentPrice || DEFAULT_SETTINGS.tentPrice
+  // Determine if booking date is weekday or weekend
+  let pricePerTent = settings.tentPrice || DEFAULT_SETTINGS.tentPrice
 
-  // Base price per tent (adjusting for weekday/weekend if not using special pricing)
-  // This part might need adjustment if you want weekday/weekend prices from settings.locations to be used by default
-  // For now, assuming settings.tentPrice is the base, and specialPricing overrides it.
-  const baseTentCost = tentPrice * numberOfTents
+  if (bookingDate && settings.locations) {
+    const date = new Date(bookingDate)
+    const dayOfWeek = date.getDay() // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    const isWeekend = dayOfWeek === 5 || dayOfWeek === 6 || dayOfWeek === 0 // Friday, Saturday, Sunday
+
+    // Find the location-specific pricing
+    const locationSettings = settings.locations.find((loc) => loc.name.toLowerCase() === location.toLowerCase())
+
+    if (locationSettings) {
+      pricePerTent = isWeekend ? locationSettings.weekendPrice : locationSettings.weekdayPrice
+    }
+  }
+
+  const baseTentCost = pricePerTent * numberOfTents
 
   // Add Wadi surcharge
   if (location === "Wadi" && numberOfTents === 1) {
@@ -143,6 +153,9 @@ export default function BookingPage() {
   const [loadingSettings, setLoadingSettings] = useState(true)
 
   const [wadiSingleTentSurcharge, setWadiSingleTentSurcharge] = useState(0)
+  const [showWadiModal, setShowWadiModal] = useState(false)
+  const [wadiModalConfirmed, setWadiModalConfirmed] = useState(false)
+  const [pendingSubmit, setPendingSubmit] = useState(false)
 
   interface DateConstraints {
     hasBookings: boolean
@@ -212,11 +225,6 @@ export default function BookingPage() {
 
   const [locationMessage, setLocationMessage] = useState("")
   const stepperSectionRef = useRef<HTMLDivElement>(null)
-
-  // Add modal state and handlers
-  const [showWadiModal, setShowWadiModal] = useState(false)
-  const [wadiModalConfirmed, setWadiModalConfirmed] = useState(false)
-  const [pendingSubmit, setPendingSubmit] = useState(false)
 
   const scrollToStepperTop = () => {
     stepperSectionRef.current?.scrollIntoView({
@@ -871,7 +879,7 @@ export default function BookingPage() {
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookingData),
+        body: JSON.JSONStringify(bookingData),
       })
 
       if (!response.ok) {
@@ -884,7 +892,7 @@ export default function BookingPage() {
       const checkoutResponse = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: JSON.JSONStringify({
           bookingId,
           ...formData,
           selectedCustomAddOns,
@@ -1022,6 +1030,7 @@ export default function BookingPage() {
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
+                    "/placeholder.svg" ||
                     "/placeholder.svg"
                   }
                   alt={campingImages[currentImageIndex].alt}
@@ -1043,6 +1052,7 @@ export default function BookingPage() {
                     src={
                       image.src ||
                       "/placeholder.svg?height=130&width=200&query=camping scene" ||
+                      "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
