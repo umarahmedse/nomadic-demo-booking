@@ -403,10 +403,18 @@ export default function BookingPage() {
   useEffect(() => {
     if (!settings) return
 
-    const customAddOnsWithSelection = (settings.customAddOns || []).map((addon) => ({
-      ...addon,
-      selected: selectedCustomAddOns.includes(addon.id),
-    }))
+    // CHANGE START: Pass only the IDs of selected custom add-ons instead of the full addon objects
+    const newPricing = calculatePrice(
+      formData.numberOfTents,
+      formData.location,
+      formData.addOns,
+      selectedCustomAddOns, // Pass only the IDs array
+      settings,
+      formData.bookingDate,
+      formData.children, // Pass children count
+    )
+    setPricing(newPricing)
+    // CHANGE END
 
     let wadiSurcharge = 0
     if (formData.location === "Wadi" && formData.numberOfTents === 1) {
@@ -414,17 +422,7 @@ export default function BookingPage() {
     }
     setWadiSingleTentSurcharge(wadiSurcharge)
 
-    const newPricing = calculatePrice(
-      // Changed to calculatePrice
-      formData.numberOfTents,
-      formData.location,
-      formData.addOns,
-      customAddOnsWithSelection, // Pass selected custom add-ons
-      settings,
-      formData.bookingDate,
-      formData.children, // Pass children count
-    )
-    setPricing(newPricing)
+    // Removed the original calculatePrice call here as it's now handled above
   }, [
     formData.numberOfTents,
     formData.location,
@@ -879,7 +877,7 @@ export default function BookingPage() {
       const response = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.JSONStringify(bookingData),
+        body: JSON.stringify(bookingData),
       })
 
       if (!response.ok) {
@@ -892,7 +890,7 @@ export default function BookingPage() {
       const checkoutResponse = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.JSONStringify({
+        body: JSON.stringify({
           bookingId,
           ...formData,
           selectedCustomAddOns,
@@ -1031,6 +1029,8 @@ export default function BookingPage() {
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
                     "/placeholder.svg" ||
+                    "/placeholder.svg" ||
+                    "/placeholder.svg" ||
                     "/placeholder.svg"
                   }
                   alt={campingImages[currentImageIndex].alt}
@@ -1052,6 +1052,7 @@ export default function BookingPage() {
                     src={
                       image.src ||
                       "/placeholder.svg?height=130&width=200&query=camping scene" ||
+                      "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
                       "/placeholder.svg" ||
@@ -1863,7 +1864,7 @@ export default function BookingPage() {
                       </Button>
                       <Button
                         type="button"
-                        onClick={() => handleStepChange(2)}
+                        onClick={() => handleStepChange(3)}
                         className="bg-[#3C2317] text-[#FBF9D9] hover:bg-[#5D4037] cursor-pointer"
                       >
                         Next
@@ -1872,7 +1873,7 @@ export default function BookingPage() {
                   </>
                 )}
 
-                {/* CHANGE END */}
+                {/* END CHANGE */}
                 {dateConstraints?.blocked && (
                   <div className="flex justify-start pt-2 sm:pt-3">
                     <Button
